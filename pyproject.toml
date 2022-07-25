@@ -1,0 +1,126 @@
+[tool.poetry]
+name = "reportbro_designer_api"
+version = "0.1.0"
+description = ""
+authors = ["ppolxda"]
+
+packages = [
+    { include = "reportbro_designer_api" },
+]
+include = ["status/*"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = "^0.78.0"
+uvicorn = {extras = ["standard"], version = "^0.17.6"}
+pycryptodome = "^3.14.1"
+python-dateutil = "^2.8.2"
+pyhumps = "^3.7.1"
+pytz = "^2022.1"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+gunicorn = "^20.1.0"
+sqlalchemy = "^1.4.38"
+boto3 = "^1.24.34"
+shortuuid = "^1.0.9"
+jinja2 = "^3.1.2"
+reportbro-lib = "^2.1.1"
+
+[tool.poetry.dev-dependencies]
+black = {version = "^22.3.0", allow-prereleases = true}
+pre-commit = "^2.19.0"
+pydocstyle = {extras = ["toml"], version = "^6.1.1"}
+pycodestyle = "^2.8.0"
+flake8 = "^4.0.1"
+pylint = "^2.13.9"
+bandit = {extras = ["toml"], version = "^1.7.4"}
+pytest = "^7.1.2"
+pytest-asyncio = "^0.18.3"
+pytest-mock = "^3.7.0"
+aioresponses = "^0.7.3"
+flake8-docstrings = "^1.6.0"
+pep8-naming = "^0.12.1"
+pytest-httpx = "^0.21.0"
+boto3-stubs = {extras = ["essential"], version = "^1.24.35"}
+fonttools = "^4.34.4"
+
+
+[[tool.poetry.source]]
+name = "aliyun"
+url = "https://mirrors.aliyun.com/pypi/simple"
+default = true
+
+
+[tool.isort]
+profile = "black"
+line_length = 88
+atomic = true
+force_single_line = true
+# include_trailing_comma = true
+# lines_after_imports = 2
+# lines_between_types = 1
+# use_parentheses = true
+src_paths = ["reportbro_designer_api", "tests"]
+skip_glob = ["*/setup.py"]
+filter_files = true
+
+[tool.black]
+line-length = 88
+include = '\.py?$'
+force_single_line = true
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | tests/.*/setup.py
+)/
+'''
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+ignore = ["depends", "**/otf2ttf.py"]
+
+[tool.pyright]
+include = [
+  "reportbro_designer_api"
+]
+exclude = [
+    "**/node_modules",
+    "**/__pycache__",
+    # "src/typestubs"
+]
+reportMissingImports = true
+reportMissingTypeStubs = false
+pythonVersion = "3.8"
+
+[tool.pydocstyle]
+ignore = ["D100", "D212", "D203", "D104", "D213"]
+
+[tool.bandit]
+targets = ["reportbro_designer_api",]
+skips = ["B404",]
+
+[tool.pylint]
+disable = ["W0703", "C3001"]
+
+[tool.pylint.'MESSAGES CONTROL']
+extension-pkg-whitelist = ["pydantic", "lxml"]
+
+[tool.poetry.scripts]
+build = "scripts.run:build"
+check = "scripts.run:check"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

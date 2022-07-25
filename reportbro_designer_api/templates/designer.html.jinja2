@@ -1,0 +1,63 @@
+{% extends 'layout.html.jinja2' %}
+
+{% block content %}
+<div id="reportbro"></div>
+<style type="text/css">
+    {% for item in fonts %}
+        @font-face {
+            font-family: "{{ item["name"] }}";
+            src: url("{{ url_for('static', path='/fonts/' + item["href"]) }}");
+        }
+    {% endfor %}
+</style>
+
+<script type="text/javascript">
+var rb = null;
+var tid = "{{ tid|safe }}";
+var version_id = "{{ version_id|safe }}";
+
+function saveReport() {
+    var report = rb.getReport();
+    if (version_id.length > 0) {
+        version_id = "?version_id=" + version_id;
+    }
+
+    $.ajax("{{ url_for('Save Templates', tid=tid) }}" + version_id, {
+        data: JSON.stringify({"report": report}),
+        type: "POST", 
+        contentType: "application/json",
+        success: function(data) {
+            // report definition saved successfully,
+            // set modified flag to false to disable save button
+            rb.setModified(false);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('saving report failed');
+        }
+    });
+}
+
+$(document).ready(function() {
+    var report = {{ report|safe }};
+    rb = $('#reportbro').reportBro({
+        //remove reportServerUrl if you want to use the default report server for a quick start
+        reportServerUrl: '{{ url_for('Generate preview file from template') }}',
+        menuShowButtonLabels: true,
+        menuShowDebug: {{ 'true' if menu_show_debug else 'false' }},
+        menuSidebar: {{ 'true' if menu_sidebar else 'false' }},
+        localeKey: "{{ locale }}",
+        saveCallback: saveReport,
+        defaultFont: '{{default_font}}',
+        fonts: [ 
+    {% for item in fonts %}
+            { name: '{{item["name"].title()}}', value: '{{item["name"]}}' },
+    {% endfor %}
+            { name: 'Courier', value: "courier" },
+            { name: 'Helvetica', value: "helvetica" },
+            { name: 'Times New Roman', value: "times" },
+        ]
+    });
+    $('#reportbro').reportBro('load', report);
+});
+</script>
+{% endblock %}
