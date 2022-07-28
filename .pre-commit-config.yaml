@@ -50,6 +50,11 @@ repos:
     hooks:
       - id: pydocstyle
         additional_dependencies: ["toml"]
+        exclude: |
+          (?x)(
+            ^depends//.*
+            | ^scripts/otf2ttf.py
+          )
 
   - repo: local
     hooks:
@@ -80,6 +85,7 @@ repos:
             ^depends//.*
             | ^tests/.*/fixtures/.*
             | ^.vscode/.*
+            | ^reportbro_designer_api/static/.*
             | .*\.md$
           )
       - id: fix-encoding-pragma

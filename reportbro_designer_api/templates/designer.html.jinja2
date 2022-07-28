@@ -24,7 +24,7 @@ function saveReport() {
 
     $.ajax("{{ url_for('Save Templates', tid=tid) }}" + version_id, {
         data: JSON.stringify({"report": report}),
-        type: "POST", 
+        type: "POST",
         contentType: "application/json",
         success: function(data) {
             // report definition saved successfully,
@@ -48,7 +48,7 @@ $(document).ready(function() {
         localeKey: "{{ locale }}",
         saveCallback: saveReport,
         defaultFont: '{{default_font}}',
-        fonts: [ 
+        fonts: [
     {% for item in fonts %}
             { name: '{{item["name"].title()}}', value: '{{item["name"]}}' },
     {% endfor %}
