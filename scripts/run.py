@@ -11,14 +11,14 @@ import sys
 
 
 def check():
-    """check_code."""
+    """Check code."""
     print("check_code")
     proc = subprocess.Popen("poetry run pre-commit run --all-files", shell=True)
     proc.wait()
 
 
 def export():
-    """export requirements."""
+    """Portry export requirements."""
     print("export requirements")
     proc = subprocess.Popen(
         "poetry export -f requirements.txt --output requirements.txt --without-hashes",
@@ -28,7 +28,7 @@ def export():
 
 
 def build():
-    """build."""
+    """Build."""
     print("build")
     if sys.platform == "win32":
         proc = subprocess.Popen(".\\scripts\\build.bat", shell=True)
