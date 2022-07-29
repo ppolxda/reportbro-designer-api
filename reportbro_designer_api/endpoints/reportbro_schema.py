@@ -27,13 +27,12 @@ class TemplateListData(BaseTemplate):
 
     tid: str = Field(title="Template id")
     version_id: str = Field(title="Template version id")
+    template_designer_page: str = Field(title="Template Designer Page")
 
 
-class TemplateDescData(BaseTemplate):
+class TemplateDescData(TemplateListData):
     """TemplateList."""
 
-    tid: str = Field(title="Template id")
-    version_id: str = Field(title="Template version id")
     report: dict = Field(title="Template Data")
 
 

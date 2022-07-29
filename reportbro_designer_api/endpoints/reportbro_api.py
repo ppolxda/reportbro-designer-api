@@ -20,6 +20,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Path
 from fastapi import Query
+from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from fastapi.responses import StreamingResponse
 from reportbro import ReportBroError
@@ -56,12 +57,25 @@ TAGS: List[Union[str, Enum]] = ["ReportBro Api"]
     response_model=TemplateListResponse,
 )
 async def main_index_page(
+    request: Request,
     s3cli: ReportbroS3Client = Depends(get_s3_client),
 ):
     """Get templates List."""
-    list_ = s3cli.get_templates_list()
+    list_: List[dict] = s3cli.get_templates_list()
     return TemplateListResponse(
-        code=HTTP_200_OK, error="ok", data=[TemplateListData(**i) for i in list_]
+        code=HTTP_200_OK,
+        error="ok",
+        data=[
+            TemplateListData(
+                **{
+                    **i,
+                    "template_designer_page": request.url_for(
+                        "Templates Designer page", tid=i["tid"]
+                    ),
+                }
+            )
+            for i in list_
+        ],
     )
 
 
@@ -72,13 +86,26 @@ async def main_index_page(
     response_model=TemplateListResponse,
 )
 async def get_versions(
+    request: Request,
     tid: str = Path(title="Template id"),
     s3cli: ReportbroS3Client = Depends(get_s3_client),
 ):
     """Get templates List."""
     list_ = s3cli.get_templates_version_list(tid)
     return TemplateListResponse(
-        code=HTTP_200_OK, error="ok", data=[TemplateListData(**i) for i in list_]
+        code=HTTP_200_OK,
+        error="ok",
+        data=[
+            TemplateListData(
+                **{
+                    **i,
+                    "template_designer_page": request.url_for(
+                        "Templates Designer page", tid=i["tid"]
+                    ),
+                }
+            )
+            for i in list_
+        ],
     )
 
 
@@ -89,6 +116,7 @@ async def get_versions(
     response_model=TemplateDescResponse,
 )
 async def get_templates_data(
+    request: Request,
     tid: str = Path(title="Template id"),
     version_id: Optional[str] = Query(
         None, title="Template version id", alias="versionId"
@@ -98,7 +126,16 @@ async def get_templates_data(
     """Get templates List."""
     list_ = s3cli.get_templates(tid, version_id)
     return TemplateDescResponse(
-        code=HTTP_200_OK, error="ok", data=TemplateDescData(**list_)
+        code=HTTP_200_OK,
+        error="ok",
+        data=TemplateDescData(
+            **{
+                **list_,
+                "template_designer_page": request.url_for(
+                    "Templates Designer page", tid=list_["tid"]
+                ),
+            }
+        ),
     )
 
 
@@ -109,6 +146,7 @@ async def get_templates_data(
     response_model=TemplateDataResponse,
 )
 async def create_templates(
+    request: Request,
     req: RequestCreateTemplate,
     s3cli: ReportbroS3Client = Depends(get_s3_client),
 ):
@@ -123,6 +161,9 @@ async def create_templates(
             template_type=req.template_type,
             tid=rrr["tid"],
             version_id=rrr["version_id"],
+            template_designer_page=request.url_for(
+                "Templates Designer page", tid=rrr["tid"]
+            ),
         ),
     )
 

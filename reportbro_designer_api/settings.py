@@ -38,9 +38,7 @@ class Settings(BaseSettings):
     PDF_LOCALE: str = "en_us"
 
     ROOT_PATH: str = ""
-    ROOT_PATH_IN_SERVERS: bool = bool(
-        os.environ.get("ROOT_PATH_IN_SERVERS", "false") == "true"
-    )
+    ROOT_PATH_IN_SERVERS: bool = True
 
     MINIO_ACCESS_KEY: str = "minioadmin"
     MINIO_SECRET_KEY: str = "minioadmin"
