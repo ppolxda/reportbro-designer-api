@@ -15,7 +15,7 @@ from reportbro_designer_api.utils.report import ReportFontsLoader
 @pytest.mark.usefixtures()
 def test_fonts_api(debug_env):
     """Test reportbro fonts function."""
+    assert debug_env is None
     settings = get_settings()
-
     fonts = ReportFontsLoader(settings.FONTS_PATH)
     assert len(fonts.fonts) == 4

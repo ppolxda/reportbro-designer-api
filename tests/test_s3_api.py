@@ -8,16 +8,13 @@
 """
 import pytest
 
-from reportbro_designer_api.settings import get_s3_client
 from reportbro_designer_api.utils.s3 import ClientError
+from reportbro_designer_api.utils.s3 import ReportbroS3Client
 
 
 @pytest.mark.usefixtures()
-def test_s3_api(debug_env):
+def test_s3_api(s3cli: ReportbroS3Client):
     """Test s3 reportbro api function."""
-    assert debug_env is None
-    s3cli = get_s3_client()
-    s3cli.reset_bucket()
     body = {"aaa": ""}
 
     _id = s3cli.gen_uuid_object_key()

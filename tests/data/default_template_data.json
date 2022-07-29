@@ -1,0 +1,64 @@
+{
+    "Invoice": [
+        {
+            "Description": "Website Requirements Definition",
+            "VAT": "20",
+            "UnitPrice": "120",
+            "Quantity": "14,25",
+            "Amount": "1710"
+        },
+        {
+            "Description": "Web Design",
+            "VAT": "20",
+            "UnitPrice": "120",
+            "Quantity": "28",
+            "Amount": "3360"
+        },
+        {
+            "Description": "Web Development",
+            "VAT": "20",
+            "UnitPrice": "135",
+            "Quantity": "57",
+            "Amount": "7695"
+        },
+        {
+            "Description": "QA & Testing",
+            "VAT": "20",
+            "UnitPrice": "100",
+            "Quantity": "12",
+            "Amount": "1200"
+        },
+        {
+            "Description": "Deployment & Server Maintenance",
+            "VAT": "20",
+            "UnitPrice": "110",
+            "Quantity": "8",
+            "Amount": "880"
+        }
+    ],
+    "Recipient": {
+        "Company": "Mayer Consulting",
+        "LastName": "Mayer",
+        "FirstName": "Max",
+        "AddressStreet": "Freihausgasse 17",
+        "ZIP": "1040",
+        "City": "Wien"
+    },
+    "InvoiceDetails": {
+        "InvoiceAmountNet": "",
+        "InvoiceTax": "",
+        "InvoiceAmountGross": "",
+        "InvoiceNumber": "123",
+        "InvoiceDate": "2017-06-12"
+    },
+    "CompanyDetails": {
+        "Name": "MyCompany, Inc.",
+        "Street": "Invented Street 843",
+        "City": "12345 Company City",
+        "WebAddress": "www.reportbro.com",
+        "IBAN": "AT25 1420 0123 1234 1234",
+        "Bank": "easybank",
+        "BIC": "EASYATW1",
+        "UID": "ATU12345678"
+    }
+}
