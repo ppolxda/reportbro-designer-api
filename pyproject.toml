@@ -25,6 +25,8 @@ shortuuid = "^1.0.9"
 jinja2 = "^3.1.2"
 reportbro-lib = "^2.1.1"
 pypdf2 = "^2.8.1"
+filetype = "^1.1.0"
+requests = "^2.28.1"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^22.3.0", allow-prereleases = true}

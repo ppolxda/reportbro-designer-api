@@ -6,6 +6,7 @@
 
 @desc: ReportBro Api
 """
+import os
 import traceback
 from datetime import datetime
 from enum import Enum
@@ -15,7 +16,9 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+import filetype
 import PyPDF2
+import requests
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -37,7 +40,9 @@ from ..utils.model import ErrorResponse
 from ..utils.report import ReportPdf
 from .reportbro_schema import RequestCloneTemplate
 from .reportbro_schema import RequestCreateTemplate
+from .reportbro_schema import RequestGenerateDataTemplate
 from .reportbro_schema import RequestGenerateTemplate
+from .reportbro_schema import RequestGenerateUrlTemplate
 from .reportbro_schema import RequestMultiGenerateTemplate
 from .reportbro_schema import RequestReviewTemplate
 from .reportbro_schema import RequestUploadTemplate
@@ -51,6 +56,12 @@ router = APIRouter()
 TAGS: List[Union[str, Enum]] = ["ReportBro Api"]
 GEN_TAGS: List[Union[str, Enum]] = ["ReportBro Generate Api"]
 # templates = Jinja2Templates(directory=settings.TEMPLATES_PATH)
+
+
+def is_pdf(data: bytes):
+    """is_pdf."""
+    rtype = filetype.guess(data)
+    return rtype and rtype.extension == "pdf"
 
 
 @router.get(
@@ -134,6 +145,7 @@ async def get_templates_data(
         data=TemplateDescData(
             **{
                 **list_,
+                "report": list_["template_body"],
                 "template_designer_page": request.url_for(
                     "Templates Designer page", tid=list_["tid"]
                 ),
@@ -175,9 +187,10 @@ async def create_templates(
     "/templates/{tid}",
     tags=TAGS,
     name="Save Templates",
-    response_model=ErrorResponse,
+    response_model=TemplateDataResponse,
 )
 async def save_templates(
+    request: Request,
     req: RequestUploadTemplate,
     tid: str = Path(title="Template id"),
     s3cli: ReportbroS3Client = Depends(get_s3_client),
@@ -190,22 +203,35 @@ async def save_templates(
         )
 
     obj = s3cli.get_templates_object(tid)
-    s3cli.put_templates(
+    rrr = s3cli.put_templates(
         tid,
         obj.metadata["template_name"],
         obj.metadata["template_type"],
         req.report,
     )
-    return ErrorResponse(code=HTTP_200_OK, error="ok")
+    return TemplateDataResponse(
+        code=HTTP_200_OK,
+        error="ok",
+        data=TemplateListData(
+            template_name=obj.metadata["template_name"],
+            template_type=obj.metadata["template_type"],
+            tid=tid,
+            version_id=rrr["version_id"],
+            template_designer_page=request.url_for(
+                "Templates Designer page", tid=rrr["tid"]
+            ),
+        ),
+    )
 
 
 @router.post(
     "/templates/{tid}/clone",
     tags=TAGS,
     name="Clone Templates",
-    response_model=ErrorResponse,
+    response_model=TemplateDataResponse,
 )
 async def clone_templates(
+    request: Request,
     req: RequestCloneTemplate,
     tid: str = Path(title="Template id"),
     s3cli: ReportbroS3Client = Depends(get_s3_client),
@@ -222,13 +248,26 @@ async def clone_templates(
             detail="tid, from_tid must not same",
         )
 
-    s3cli.put_templates(
+    obj_src = s3cli.get_templates(tid)
+    rrr = s3cli.put_templates(
         tid,
-        obj["template_name"],
-        obj["template_type"],
-        obj["report"],
+        obj_src["template_name"],
+        obj_src["template_type"],
+        obj["template_body"],
     )
-    return ErrorResponse(code=HTTP_200_OK, error="ok")
+    return TemplateDataResponse(
+        code=HTTP_200_OK,
+        error="ok",
+        data=TemplateListData(
+            template_name=obj_src["template_name"],
+            template_type=obj_src["template_type"],
+            tid=tid,
+            version_id=rrr["version_id"],
+            template_designer_page=request.url_for(
+                "Templates Designer page", tid=rrr["tid"]
+            ),
+        ),
+    )
 
 
 @router.delete(
@@ -274,7 +313,7 @@ def gen_file_from_report(output_format, report_definition, data, is_test_data):
         )
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail="failed to initialize report[{}]".format(ex),
+            detail=f"failed to initialize report[{ex}]",
         ) from ex
 
     if report.report.errors:
@@ -303,7 +342,7 @@ def gen_file_from_report(output_format, report_definition, data, is_test_data):
         # processed by ReportBro Designer.
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail="failed to generation report[{}]".format(ex),
+            detail=f"failed to generation report[{ex}]",
         ) from ex
     finally:
         end = timer()
@@ -399,13 +438,34 @@ async def generation_templates_multi_gen(
     filename = ""
     merge_file = PyPDF2.PdfFileMerger()
     for i in req.templates:
-        obj = s3cli.get_templates(i.tid, i.version_id)
-        filename, report_file = gen_file_from_report(
-            req.output_format,
-            obj["template_body"],
-            i.data,
-            False,
-        )
+        if isinstance(i, RequestGenerateUrlTemplate):
+            if i.pdf_url.startswith("file://"):
+                with open(i.pdf_url[7:], "rb") as fss:
+                    data = fss.read()
+                filename, report_file = os.path.basename(i.pdf_url), data
+            else:
+                data = requests.get(i.pdf_url, timeout=settings.DOWNLOAD_TIMEOUT)
+                filename, report_file = os.path.basename(i.pdf_url), data.content
+
+            if not is_pdf(report_file):
+                raise HTTPException(
+                    status_code=HTTP_400_BAD_REQUEST,
+                    detail="pdf_url is not pdf file",
+                )
+        elif isinstance(i, RequestGenerateDataTemplate):
+            obj = s3cli.get_templates(i.tid, i.version_id)
+            filename, report_file = gen_file_from_report(
+                req.output_format,
+                obj["template_body"],
+                i.data,
+                False,
+            )
+        else:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="templates is invaild",
+            )
+
         merge_file.append(
             PyPDF2.PdfFileReader(stream=BytesIO(initial_bytes=report_file))
         )

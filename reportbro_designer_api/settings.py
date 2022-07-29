@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     STATIC_PATH: str = STATIC_PATH
     TEMPLATES_PATH: str = TEMPLATES_PATH
     FONTS_PATH: str = FONTS_PATH
+    DEFAULT_TEMPLATE_PATH: str = ""
     OPENAPI_URL: str = ""
     PDF_TITLE: str = "report"
     PDF_DEFAULT_FONT: str = "helvetica"
@@ -46,6 +47,8 @@ class Settings(BaseSettings):
     MINIO_BUCKET: str = "reportbro"
     # MINIO_SITE_NAME: str = "reportbro-s3"
     MINIO_SITE_REGION: str = "us-west-1"
+
+    DOWNLOAD_TIMEOUT: int = 180
 
     def format_print(self):
         """Print config."""
@@ -78,9 +81,16 @@ def get_settings():
 @lru_cache()
 def get_s3_client() -> ReportbroS3Client:
     """Get s3 client."""
-    with open(
-        settings.STATIC_PATH + "/default_template.json", "r", encoding="utf8"
-    ) as fss:
+    return create_s3_client()
+
+
+def create_s3_client() -> ReportbroS3Client:
+    """Create s3 client."""
+    tmp_path = settings.STATIC_PATH + "/default_template.json"
+    if settings.DEFAULT_TEMPLATE_PATH:
+        tmp_path = settings.DEFAULT_TEMPLATE_PATH
+
+    with open(tmp_path, "r", encoding="utf8") as fss:
         defdata = fss.read()
         defdata = json.loads(defdata)
 

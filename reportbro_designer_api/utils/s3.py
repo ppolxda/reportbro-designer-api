@@ -67,8 +67,8 @@ class ReportbroS3Client(object):
             project = self.project_name
         return "/".join([self.TEMPLATES_PREFIX, project, object_id])
 
-    def reset_bucket(self):
-        """Delete bucket and Create bucket, Use for testing."""
+    def clear_bucket(self):
+        """Clear bucket."""
         if not self.is_bucket_exist():
             self.create_bucket_when_not_exist()
             return
@@ -80,6 +80,10 @@ class ReportbroS3Client(object):
             i.delete()
 
         self.bucket.delete()
+
+    def reset_bucket(self):
+        """Delete bucket and Create bucket, Use for testing."""
+        self.clear_bucket()
         self.create_bucket_when_not_exist()
 
     def create_bucket_when_not_exist(self):
@@ -287,7 +291,7 @@ class ReportbroS3Client(object):
             body = self.default_template
 
         return {
-            "tid": object_key,
+            "tid": tid,
             "version_id": res["VersionId"],
             **res["Metadata"],
             "template_body": body,

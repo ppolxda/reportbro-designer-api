@@ -8,6 +8,7 @@
 """
 from typing import List
 from typing import Optional
+from typing import Union
 
 from pydantic import Field
 
@@ -69,15 +70,21 @@ class RequestGenerateDataTemplate(BaseModel):
     data: dict = Field(default_factory=dict, title="Source Data")
 
 
+class RequestGenerateUrlTemplate(BaseModel):
+    """RequestGenerateTemplate."""
+
+    pdf_url: str = Field(title="Download url for pdf")
+
+
 class RequestMultiGenerateTemplate(BaseModel):
     """RequestMultiGenerateTemplate."""
 
     output_format: str = Field(
         "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
     )
-    templates: List[RequestGenerateDataTemplate] = Field(
-        default_factory=list, title="Input templates list"
-    )
+    templates: List[
+        Union[RequestGenerateDataTemplate, RequestGenerateUrlTemplate]
+    ] = Field(default_factory=list, title="Input templates list")
 
 
 class RequestReviewTemplate(RequestGenerateTemplate):
