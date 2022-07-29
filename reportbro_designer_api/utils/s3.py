@@ -104,7 +104,7 @@ class ReportbroS3Client(object):
         if self.is_bucket_lifecycle_exist():
             return
 
-        self.bucket.Lifecycle().put(
+        res = self.bucket.Lifecycle().put(
             LifecycleConfiguration={
                 "Rules": [
                     {
@@ -119,14 +119,18 @@ class ReportbroS3Client(object):
                 ]
             }
         )
+        if res and res.get("ResponseMetadata", {}).get("HTTPStatusCode", 0) != 200:
+            raise S3ClientError(f"Enabled Lifecycle Error[{res}]")
 
     def enable_bucket_versioning(self):
         """Enable bucket versioning."""
         if getattr(self, "has_bucket_versioning", False):
             return
-
-        if not self.s3res.BucketVersioning(self.bucket_name).status:
-            self.s3res.BucketVersioning(self.bucket_name).enable()
+        status = self.s3res.BucketVersioning(self.bucket_name).status
+        if status != "Enabled":
+            res = self.s3res.BucketVersioning(self.bucket_name).enable()
+            if res and res.get("ResponseMetadata", {}).get("HTTPStatusCode", 0) != 200:
+                raise S3ClientError(f"Enabled BucketVersioning Error[{res}]")
 
         setattr(self, "has_bucket_versioning", True)
 
