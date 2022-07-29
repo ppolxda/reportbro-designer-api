@@ -6,6 +6,8 @@
 
 @desc: ReportBro Api
 """
+from re import template
+from typing import List
 from typing import Optional
 
 from pydantic import Field
@@ -22,11 +24,16 @@ class BaseTemplate(BaseModel):
     template_type: str = Field(title="Template type")
 
 
-class TemplateListData(BaseTemplate):
+class BaseTemplateId(BaseModel):
     """TemplateList."""
 
     tid: str = Field(title="Template id")
     version_id: str = Field(title="Template version id")
+
+
+class TemplateListData(BaseTemplate, BaseTemplateId):
+    """TemplateList."""
+
     template_designer_page: str = Field(title="Template Designer Page")
 
 
@@ -53,6 +60,25 @@ class RequestGenerateTemplate(BaseModel):
         "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
     )
     data: dict = Field(title="Source Data")
+
+
+class RequestGenerateDataTemplate(BaseModel):
+    """RequestGenerateTemplate."""
+
+    tid: str = Field(title="Template id")
+    version_id: Optional[str] = Field(title="Template version id")
+    data: dict = Field(default_factory=dict, title="Source Data")
+
+
+class RequestMultiGenerateTemplate(BaseModel):
+    """RequestMultiGenerateTemplate."""
+
+    output_format: str = Field(
+        "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
+    )
+    templates: List[RequestGenerateDataTemplate] = Field(
+        default_factory=list, title="Input templates list"
+    )
 
 
 class RequestReviewTemplate(RequestGenerateTemplate):

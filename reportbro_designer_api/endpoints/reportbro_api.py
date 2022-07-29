@@ -15,6 +15,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
+import PyPDF2
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -37,6 +38,7 @@ from ..utils.report import ReportPdf
 from .reportbro_schema import RequestCloneTemplate
 from .reportbro_schema import RequestCreateTemplate
 from .reportbro_schema import RequestGenerateTemplate
+from .reportbro_schema import RequestMultiGenerateTemplate
 from .reportbro_schema import RequestReviewTemplate
 from .reportbro_schema import RequestUploadTemplate
 from .reportbro_schema import TemplateDataResponse
@@ -47,6 +49,7 @@ from .reportbro_schema import TemplateListResponse
 
 router = APIRouter()
 TAGS: List[Union[str, Enum]] = ["ReportBro Api"]
+GEN_TAGS: List[Union[str, Enum]] = ["ReportBro Generate Api"]
 # templates = Jinja2Templates(directory=settings.TEMPLATES_PATH)
 
 
@@ -247,7 +250,7 @@ async def delete_templates(
 
 
 # ----------------------------------------------
-#        代码段描述
+#        PDF REPORT Generate
 # ----------------------------------------------
 
 
@@ -340,7 +343,7 @@ def read_file_in_s3(output_format, key, s3cli):
 
 @router.put(
     "/templates/review",
-    tags=TAGS,
+    tags=GEN_TAGS,
     name="Generate preview file from template",
 )
 async def review_templates_gen(
@@ -358,7 +361,7 @@ async def review_templates_gen(
 
 @router.get(
     "/templates/review",
-    tags=TAGS,
+    tags=GEN_TAGS,
     name="Get generate preview file",
 )
 async def review_templates(
@@ -373,13 +376,71 @@ async def review_templates(
 
 
 # ----------------------------------------------
-#        代码段描述
+#        PDF REPORT Multiple Generate
+# ----------------------------------------------
+
+
+@router.put(
+    "/templates/multi/generate",
+    tags=GEN_TAGS,
+    name="Generate file from multiple template(PDF Only)",
+)
+async def generation_templates_multi_gen(
+    req: RequestMultiGenerateTemplate,
+    s3cli: ReportbroS3Client = Depends(get_s3_client),
+):
+    """Review Templates Generate."""
+    if not req.templates:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="templates is empty",
+        )
+
+    filename = ""
+    merge_file = PyPDF2.PdfFileMerger()
+    for i in req.templates:
+        obj = s3cli.get_templates(i.tid, i.version_id)
+        filename, report_file = gen_file_from_report(
+            req.output_format,
+            obj["template_body"],
+            i.data,
+            False,
+        )
+        merge_file.append(
+            PyPDF2.PdfFileReader(stream=BytesIO(initial_bytes=report_file))
+        )
+
+    rrr = BytesIO()
+    merge_file.write(rrr)
+    rrr.seek(0)
+
+    assert filename
+    s3file = s3cli.put_review(req.output_format, rrr.read(), filename)
+    key = "key:" + str(s3file["version_id"])
+    return PlainTextResponse(key)
+
+
+@router.get(
+    "/templates/multi/generate",
+    tags=GEN_TAGS,
+    name="Get generate file from multiple template",
+)
+async def generation_templates_multi(
+    key: str = Query(title="File Key", min_length=16),
+    s3cli: ReportbroS3Client = Depends(get_s3_client),
+):
+    """Review Templates."""
+    return read_file_in_s3("pdf", key, s3cli)
+
+
+# ----------------------------------------------
+#        PDF REPORT Generate
 # ----------------------------------------------
 
 
 @router.put(
     "/templates/{tid}/generate",
-    tags=TAGS,
+    tags=GEN_TAGS,
     name="Generate file from template",
 )
 async def generation_templates_gen(
@@ -405,7 +466,7 @@ async def generation_templates_gen(
 
 @router.get(
     "/templates/{tid}/generate",
-    tags=TAGS,
+    tags=GEN_TAGS,
     name="Get generate file",
 )
 async def generation_templates(

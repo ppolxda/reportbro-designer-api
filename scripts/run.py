@@ -17,6 +17,16 @@ def check():
     proc.wait()
 
 
+def export():
+    """export requirements."""
+    print("export requirements")
+    proc = subprocess.Popen(
+        "poetry export -f requirements.txt --output requirements.txt --without-hashes",
+        shell=True,
+    )
+    proc.wait()
+
+
 def build():
     """build."""
     print("build")
