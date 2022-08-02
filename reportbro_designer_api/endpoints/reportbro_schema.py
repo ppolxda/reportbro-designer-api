@@ -43,6 +43,13 @@ class TemplateDescData(TemplateListData):
     report: dict = Field(title="Template Data")
 
 
+class TemplateDownLoadData(BaseModel):
+    """TemplateDownLoadData."""
+
+    download_key: str = Field(title="Pdf download key")
+    download_url: str = Field(title="Pdf download url")
+
+
 class RequestCreateTemplate(BaseTemplate):
     """RequestCreateTemplate."""
 
@@ -111,3 +118,7 @@ class TemplateDescResponse(DataResponse[TemplateDescData]):
 
 class TemplateDataResponse(DataResponse[TemplateListData]):
     """TemplateDataResponse."""
+
+
+class TemplateDownLoadResponse(DataResponse[TemplateDownLoadData]):
+    """TemplateDownLoadResponse."""

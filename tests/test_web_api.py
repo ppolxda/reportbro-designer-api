@@ -237,9 +237,11 @@ def test_web_generate_pdf_review(default_template):
     assert (
         response.status_code == 200
         and response.text
-        and response.text.startswith("key:")
+        and response.json()["data"]["downloadKey"].startswith("key:")
+        and response.json()["data"]["downloadUrl"]
     )
-    filekey = response.text
+    download_url = response.json()["data"]["downloadUrl"]
+    filekey = response.json()["data"]["downloadKey"]
     response = client.get(
         f"/api/templates/{tid}/generate",
         params={
@@ -249,6 +251,11 @@ def test_web_generate_pdf_review(default_template):
     )
     assert is_pdf(response.content)
     with open(out_path + "/generate_data.pdf", "wb") as fss:
+        fss.write(response.content)
+
+    response = client.get(download_url)
+    assert is_pdf(response.content)
+    with open(out_path + "/generate_data_url.pdf", "wb") as fss:
         fss.write(response.content)
 
 
@@ -304,9 +311,11 @@ def test_web_generate_pdf_mutil(default_template, s3cli: ReportbroS3Client):
     assert (
         response.status_code == 200
         and response.text
-        and response.text.startswith("key:")
+        and response.json()["data"]["downloadKey"].startswith("key:")
+        and response.json()["data"]["downloadUrl"]
     )
-    filekey = response.text
+    download_url = response.json()["data"]["downloadUrl"]
+    filekey = response.json()["data"]["downloadKey"]
     response = client.get(
         "/api/templates/multi/generate",
         params={
@@ -317,6 +326,11 @@ def test_web_generate_pdf_mutil(default_template, s3cli: ReportbroS3Client):
     assert is_pdf(response.content)
     multi_data_path = out_path + "/multi_data.pdf"
     with open(out_path + "/multi_data.pdf", "wb") as fss:
+        fss.write(response.content)
+
+    response = client.get(download_url)
+    assert is_pdf(response.content)
+    with open(out_path + "/multi_data_url.pdf", "wb") as fss:
         fss.write(response.content)
 
     # test gen mutil
@@ -347,9 +361,11 @@ def test_web_generate_pdf_mutil(default_template, s3cli: ReportbroS3Client):
     assert (
         response.status_code == 200
         and response.text
-        and response.text.startswith("key:")
+        and response.json()["data"]["downloadKey"].startswith("key:")
+        and response.json()["data"]["downloadUrl"]
     )
-    filekey = response.text
+    download_url = response.json()["data"]["downloadUrl"]
+    filekey = response.json()["data"]["downloadKey"]
     response = client.get(
         "/api/templates/multi/generate",
         params={
@@ -359,4 +375,9 @@ def test_web_generate_pdf_mutil(default_template, s3cli: ReportbroS3Client):
     )
     assert is_pdf(response.content)
     with open(out_path + "/multi_download_data.pdf", "wb") as fss:
+        fss.write(response.content)
+
+    response = client.get(download_url)
+    assert is_pdf(response.content)
+    with open(out_path + "/multi_data_url.pdf", "wb") as fss:
         fss.write(response.content)

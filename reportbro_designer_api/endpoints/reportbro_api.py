@@ -15,6 +15,7 @@ from timeit import default_timer as timer
 from typing import List
 from typing import Optional
 from typing import Union
+from urllib.parse import urlencode
 
 import filetype
 import PyPDF2
@@ -49,6 +50,8 @@ from .reportbro_schema import RequestUploadTemplate
 from .reportbro_schema import TemplateDataResponse
 from .reportbro_schema import TemplateDescData
 from .reportbro_schema import TemplateDescResponse
+from .reportbro_schema import TemplateDownLoadData
+from .reportbro_schema import TemplateDownLoadResponse
 from .reportbro_schema import TemplateListData
 from .reportbro_schema import TemplateListResponse
 
@@ -423,8 +426,10 @@ async def review_templates(
     "/templates/multi/generate",
     tags=GEN_TAGS,
     name="Generate file from multiple template(PDF Only)",
+    response_model=TemplateDownLoadResponse,
 )
 async def generation_templates_multi_gen(
+    request: Request,
     req: RequestMultiGenerateTemplate,
     s3cli: ReportbroS3Client = Depends(get_s3_client),
 ):
@@ -477,7 +482,19 @@ async def generation_templates_multi_gen(
     assert filename
     s3file = s3cli.put_review(req.output_format, rrr.read(), filename)
     key = "key:" + str(s3file["version_id"])
-    return PlainTextResponse(key)
+    return TemplateDownLoadResponse(
+        code=HTTP_200_OK,
+        error="ok",
+        data=TemplateDownLoadData(
+            download_key=key,
+            download_url=request.url_for("Get generate file from multiple template")
+            + urlencode(
+                {
+                    "key": key,
+                }
+            ),
+        ),
+    )
 
 
 @router.get(
@@ -502,8 +519,10 @@ async def generation_templates_multi(
     "/templates/{tid}/generate",
     tags=GEN_TAGS,
     name="Generate file from template",
+    response_model=TemplateDownLoadResponse,
 )
 async def generation_templates_gen(
+    request: Request,
     req: RequestGenerateTemplate,
     tid: str = Path(title="Template id"),
     version_id: Optional[str] = Query(
@@ -521,7 +540,19 @@ async def generation_templates_gen(
     )
     s3file = s3cli.put_review(req.output_format, report_file, filename)
     key = "key:" + str(s3file["version_id"])
-    return PlainTextResponse(key)
+    return TemplateDownLoadResponse(
+        code=HTTP_200_OK,
+        error="ok",
+        data=TemplateDownLoadData(
+            download_key=key,
+            download_url=request.url_for("Get generate file", tid=tid)
+            + urlencode(
+                {
+                    "key": key,
+                }
+            ),
+        ),
+    )
 
 
 @router.get(
