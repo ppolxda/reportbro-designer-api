@@ -488,6 +488,7 @@ async def generation_templates_multi_gen(
         data=TemplateDownLoadData(
             download_key=key,
             download_url=request.url_for("Get generate file from multiple template")
+            + "?"
             + urlencode(
                 {
                     "key": key,
@@ -546,6 +547,7 @@ async def generation_templates_gen(
         data=TemplateDownLoadData(
             download_key=key,
             download_url=request.url_for("Get generate file", tid=tid)
+            + "?"
             + urlencode(
                 {
                     "key": key,

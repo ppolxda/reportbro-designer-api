@@ -6,8 +6,12 @@
 
 @desc: S3 Api
 """
+
+import base64
 import json
+from copy import deepcopy
 from io import BytesIO
+from typing import Dict
 from typing import List
 from typing import Optional
 from uuid import uuid1
@@ -60,6 +64,26 @@ class ReportbroS3Client(object):
         self.bucket_name = bucket
         self.bucket = self.s3res.Bucket(bucket)
         self.default_template = default_template
+
+    def encode_matedata(self, data: Dict[str, str]):
+        """Encode matedata."""
+        return {
+            key: base64.b64encode(val.encode("utf8")).decode("utf8")
+            for key, val in data.items()
+        }
+
+    def decode_matedata(self, data: Dict[str, str]):
+        """Decode matedata."""
+        def decode(val: str):
+            try:
+                return base64.b64decode(val.encode("utf8")).decode("utf8")
+            except Exception:
+                return val
+        
+        return {
+            key: decode(val)
+            for key, val in data.items()
+        }
 
     def make_template_key(self, object_id="", project=None):
         """Make template key."""
@@ -204,7 +228,7 @@ class ReportbroS3Client(object):
             return {
                 "tid": str(version.key).rsplit("/", maxsplit=1)[-1],
                 "version_id": obj.version_id,
-                **obj.metadata,
+                **self.decode_matedata(dict(obj.metadata)),
             }
 
         if template_type:
@@ -243,10 +267,12 @@ class ReportbroS3Client(object):
         res = self.bucket.Object(object_key).put(
             Body=BytesIO(json.dumps(report, indent=2).encode()),
             ContentType="application/json",
-            Metadata={
-                "template_name": template_name,
-                "template_type": template_type,
-            },
+            Metadata=self.encode_matedata(
+                {
+                    "template_name": template_name,
+                    "template_type": template_type,
+                }
+            ),
         )
         if res.get("ResponseMetadata", {}).get("HTTPStatusCode", "") != 200:
             raise S3ClientError(f"Save Template File Error[{res}]")
@@ -265,6 +291,7 @@ class ReportbroS3Client(object):
         self.create_bucket_when_not_exist()
         object_key = self.make_template_key(tid, project)
         obj = self.bucket.Object(object_key)
+        obj.metadata.update(self.decode_matedata(obj.metadata))
         return obj
 
     def get_templates(
@@ -293,7 +320,7 @@ class ReportbroS3Client(object):
         return {
             "tid": tid,
             "version_id": res["VersionId"],
-            **res["Metadata"],
+            **self.decode_matedata(res["Metadata"]),
             "template_body": body,
         }
 
@@ -313,7 +340,7 @@ class ReportbroS3Client(object):
             return {
                 "tid": str(version.key).rsplit("/", maxsplit=1)[-1],
                 "version_id": version.version_id,
-                **obj.metadata,
+                **self.decode_matedata(obj.metadata),
             }
 
         return [
@@ -379,9 +406,11 @@ class ReportbroS3Client(object):
         res = self.bucket.Object(object_key).put(
             Body=BytesIO(file_buffer),
             ContentType=ctx,
-            Metadata={
-                "filename": filename,
-            },
+            Metadata=self.encode_matedata(
+                {
+                    "filename": filename,
+                }
+            ),
         )
         if res.get("ResponseMetadata", {}).get("HTTPStatusCode", "") != 200:
             raise S3ClientError(f"Save Template File Error[{res}]")
@@ -406,8 +435,10 @@ class ReportbroS3Client(object):
         if res.get("ResponseMetadata", {}).get("HTTPStatusCode", "") != 200:
             raise S3ClientError(f"Save Template File Error[{res}]")
 
+        mdata = self.decode_matedata(res["Metadata"])
+
         return {
             "object_key": object_key,
-            "filename": res["Metadata"]["filename"],
+            "filename": mdata["filename"],
             "data": res["Body"].read(),
         }

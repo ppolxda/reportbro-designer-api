@@ -381,3 +381,21 @@ def test_web_generate_pdf_mutil(default_template, s3cli: ReportbroS3Client):
     assert is_pdf(response.content)
     with open(out_path + "/multi_data_url.pdf", "wb") as fss:
         fss.write(response.content)
+
+
+def test_web_api_non_ascii(s3cli: ReportbroS3Client):
+    """Test web api."""
+    assert s3cli
+
+    # create templates test1
+    response = client.put(
+        "/api/templates", json={"templateName": "测试", "templateType": "测试"}
+    )
+    assert response.status_code == 200
+    rdata1 = response.json()
+    tid1 = rdata1["data"]["tid"]
+    version_id1 = rdata1["data"]["versionId"]
+    assert tid1 and version_id1
+    assert "/" not in tid1
+    assert rdata1["data"]["templateName"] == "测试"
+    assert rdata1["data"]["templateType"] == "测试"
