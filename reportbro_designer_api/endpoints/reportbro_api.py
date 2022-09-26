@@ -6,6 +6,7 @@
 
 @desc: ReportBro Api
 """
+import json
 import os
 import traceback
 from datetime import datetime
@@ -39,6 +40,7 @@ from ..settings import settings
 from ..utils.logger import LOGGER
 from ..utils.model import ErrorResponse
 from ..utils.report import ReportPdf
+from ..utils.report import fill_default
 from .reportbro_schema import RequestCloneTemplate
 from .reportbro_schema import RequestCreateTemplate
 from .reportbro_schema import RequestGenerateDataTemplate
@@ -296,7 +298,9 @@ async def delete_templates(
 # ----------------------------------------------
 
 
-def gen_file_from_report(output_format, report_definition, data, is_test_data):
+def gen_file_from_report(
+    output_format, report_definition, data, is_test_data, disabled_fill
+):
     """Review Templates Generate."""
     # all data needed for report preview is sent in the initial PUT request, it contains
     # the format (pdf or xlsx), the report itself (report_definition), the data (test data
@@ -309,6 +313,9 @@ def gen_file_from_report(output_format, report_definition, data, is_test_data):
         )
 
     try:
+        if not disabled_fill:
+            fill_default(report_definition, data)
+
         report = ReportPdf(report_definition, data, FONTS_LOADER, is_test_data)
     except ReportBroError as ex:
         LOGGER.warning(
@@ -325,7 +332,7 @@ def gen_file_from_report(output_format, report_definition, data, is_test_data):
         # highlight erroneous fields and display error messages
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail="\n".join(report.report.errors),
+            detail=json.dumps(report.report.errors),
         )
 
     start = timer()
@@ -340,7 +347,8 @@ def gen_file_from_report(output_format, report_definition, data, is_test_data):
             filename = "report-" + str(now) + ".xlsx"
             return filename, report_file
     except ReportBroError as ex:
-        # in case an error occurs during report report generation a ReportBroError exception is thrown
+        # in case an error occurs during report report generation
+        # a ReportBroError exception is thrown
         # to stop processing. We return this error within a list so the error can be
         # processed by ReportBro Designer.
         raise HTTPException(
@@ -390,12 +398,16 @@ def read_file_in_s3(output_format, key, s3cli):
 )
 async def review_templates_gen(
     req: RequestReviewTemplate,
+    disabled_fill: bool = Query(
+        default=False, title="Disable fill empty fields for input data"
+    ),
     s3cli: ReportbroS3Client = Depends(get_s3_client),
 ):
     """Review Templates Generate."""
     filename, report_file = gen_file_from_report(
-        req.output_format, req.report, req.data, req.is_test_data
+        req.output_format, req.report, req.data, req.is_test_data, disabled_fill
     )
+    assert report_file
     s3file = s3cli.put_review(req.output_format, report_file, filename)
     key = "key:" + str(s3file["version_id"])
     return PlainTextResponse(key)
@@ -431,6 +443,9 @@ async def review_templates(
 async def generation_templates_multi_gen(
     request: Request,
     req: RequestMultiGenerateTemplate,
+    disabled_fill: bool = Query(
+        default=False, title="Disable fill empty fields for input data"
+    ),
     s3cli: ReportbroS3Client = Depends(get_s3_client),
 ):
     """Review Templates Generate."""
@@ -464,6 +479,7 @@ async def generation_templates_multi_gen(
                 obj["template_body"],
                 i.data,
                 False,
+                disabled_fill,
             )
         else:
             raise HTTPException(
@@ -471,6 +487,7 @@ async def generation_templates_multi_gen(
                 detail="templates is invaild",
             )
 
+        assert report_file
         merge_file.append(
             PyPDF2.PdfFileReader(stream=BytesIO(initial_bytes=report_file))
         )
@@ -529,16 +546,17 @@ async def generation_templates_gen(
     version_id: Optional[str] = Query(
         None, title="Template version id", alias="versionId"
     ),
+    disabled_fill: bool = Query(
+        default=False, title="Disable fill empty fields for input data"
+    ),
     s3cli: ReportbroS3Client = Depends(get_s3_client),
 ):
     """Review Templates Generate."""
     obj = s3cli.get_templates(tid, version_id)
     filename, report_file = gen_file_from_report(
-        req.output_format,
-        obj["template_body"],
-        req.data,
-        False,
+        req.output_format, obj["template_body"], req.data, False, disabled_fill
     )
+    assert report_file
     s3file = s3cli.put_review(req.output_format, report_file, filename)
     key = "key:" + str(s3file["version_id"])
     return TemplateDownLoadResponse(

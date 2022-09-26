@@ -33,6 +33,52 @@ FONT_TYPES = {
 }
 
 
+def fill_default(report_definition, data):
+    """Input data padding default."""
+    parameters = report_definition["parameters"]
+
+    def _loop_params(_parameters):
+        for i in _parameters:
+            if i["showOnlyNameType"]:
+                continue
+
+            yield i
+
+    def _fill_default(_parame, _data):
+        _type = _parame["type"]
+        _name = _parame["name"]
+
+        if _data.get(_name, None):
+            if _type == "map":
+                for ppp in _loop_params(_parame["children"]):
+                    _fill_default(ppp, _data[_name])
+            elif _type == "array":
+                for ppp in _loop_params(_parame["children"]):
+                    for data in _data[_name]:
+                        _fill_default(ppp, data)
+            return
+
+        if _type == "number":
+            _data[_name] = 0.00
+        elif _type == "string":
+            _data[_name] = ""
+        elif _type == "boolean":
+            _data[_name] = False
+        elif _type == "date":
+            _data[_name] = "1900-01-01"
+        elif _type in ["simple_array", "array"]:
+            _data[_name] = []
+        elif _type == "image":
+            _data[_name] = ""
+        elif _type == "map":
+            _data[_name] = {}
+            for ppp in _parame["children"]:
+                _fill_default(ppp, _data[_name])
+
+    for i in _loop_params(parameters):
+        _fill_default(i, data)
+
+
 @dataclass
 class ReportFonts(object):
     """ReportFonts."""
@@ -57,7 +103,8 @@ class ReportFontsLoader(object):
     """ReportFontsLoader."""
 
     LOAD_FMT_REGIX = re.compile(
-        r"^(?:[0-9].*?-)*(.*?)(?:-[0-9]*?)*-(bold|bolder|lighter|light|normal|medium|regular|N|M|R|L|B)\.(otf|ttf)$",
+        r"^(?:[0-9].*?-)*(.*?)(?:-[0-9]*?)*-"
+        r"(bold|bolder|lighter|light|normal|medium|regular|N|M|R|L|B)\.(otf|ttf)$",
         re.MULTILINE | re.IGNORECASE,
     )
 

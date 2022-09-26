@@ -9,7 +9,6 @@
 
 import base64
 import json
-from copy import deepcopy
 from io import BytesIO
 from typing import Dict
 from typing import List
@@ -74,16 +73,14 @@ class ReportbroS3Client(object):
 
     def decode_matedata(self, data: Dict[str, str]):
         """Decode matedata."""
+
         def decode(val: str):
             try:
                 return base64.b64decode(val.encode("utf8")).decode("utf8")
             except Exception:
                 return val
-        
-        return {
-            key: decode(val)
-            for key, val in data.items()
-        }
+
+        return {key: decode(val) for key, val in data.items()}
 
     def make_template_key(self, object_id="", project=None):
         """Make template key."""
