@@ -12,6 +12,10 @@ class ReportbroError(Exception):
     """ReportbroError."""
 
 
+class TemplageNotFoundError(Exception):
+    """TemplageNotFoundError."""
+
+
 class RetryError(ReportbroError):
     """RetryError."""
 
@@ -22,3 +26,7 @@ class NetConnectionError(ReportbroError):
 
 class S3ClientError(ReportbroError):
     """S3ClientError."""
+
+
+class ClientParamsError(ReportbroError):
+    """ClientParamsError."""

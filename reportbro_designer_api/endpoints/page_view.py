@@ -23,9 +23,10 @@ from fastapi.templating import Jinja2Templates
 
 from reportbro_designer_api.settings import settings
 
-from ..settings import FONTS_LOADER
-from ..settings import ReportbroS3Client
-from ..settings import get_s3_client
+from ..backend.base import BackendBase
+from ..clients import FONTS_LOADER
+from ..clients import get_meth_cli
+from ..errors import TemplageNotFoundError
 
 router = APIRouter()
 TAGS: List[Union[str, Enum]] = ["Static Page"]
@@ -62,18 +63,21 @@ async def templates_designer_page(
         alias="locale",
         regex=r"^(zh_cn|de_de|en_us)$",
     ),
-    s3cli: ReportbroS3Client = Depends(get_s3_client),
+    client: BackendBase = Depends(get_meth_cli),
 ):
     """Templates Designer page."""
-    obj = s3cli.get_templates(tid, version_id)
-    version_id = obj["version_id"]
+    obj = await client.get_template(tid, version_id)
+    if not obj:
+        raise TemplageNotFoundError("template not found")
+
+    version_id = obj.version_id
     return templates.TemplateResponse(
         "designer.html.jinja2",
         {
             "request": request,
             "tid": tid,
             "version_id": version_id,
-            "report": json.dumps(obj["template_body"], indent=2),
+            "report": json.dumps(obj.report, indent=2),
             "fonts": FONTS_LOADER.fonts_jinja,
             "default_font": settings.PDF_DEFAULT_FONT,
             "menu_sidebar": menu_sidebar,

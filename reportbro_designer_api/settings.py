@@ -6,17 +6,12 @@
 
 @desc: Settings
 """
-import json
 import os
 from functools import lru_cache
 
 import pkg_resources
 from pydantic import BaseSettings
-
-from reportbro_designer_api.utils.report import ReportFontsLoader
-from reportbro_designer_api.utils.s3 import ReportbroS3Client
-
-# from sqlalchemy.engine.url import make_url
+from sqlalchemy.engine.url import make_url
 
 TEMPLATES_PATH = pkg_resources.resource_filename("reportbro_designer_api", "templates")
 STATIC_PATH = pkg_resources.resource_filename("reportbro_designer_api", "static")
@@ -50,6 +45,37 @@ class Settings(BaseSettings):
 
     DOWNLOAD_TIMEOUT: int = 180
 
+    # sqlite+aiosqlite:///./reportbro.db
+    # mysql+aiomysql://root:root@localhost/reportbro
+    # postgresql+asyncpg://postgres:postgres@localhost:5432/reportbro
+    DB_URL: str = "sqlite+aiosqlite:///./reportbro.db"
+    DB_POOL_SIZE: int = 5
+    DB_POOL_TIMEOUT: int = 30
+    DB_POOL_RECYCLE: int = 1800
+    DB_MAX_OVERFLOW: int = 10
+    DB_ISOLATION_LEVEL: str = "READ UNCOMMITTED"
+    PRINT_SQL: bool = False
+    STORAGE_MODE: str = "local"
+    BACKEND_MODE: str = "db"
+
+    @property
+    def db_url_mark(self):
+        """Show the mark db config."""
+        return make_url(settings.DB_URL)
+
+    @property
+    def db_url_sync_mark(self):
+        """DB Async url to Sync url."""
+        return make_url(settings.db_url_sync)
+
+    @property
+    def db_url_sync(self):
+        """DB Async url to Sync url."""
+        db_url = settings.DB_URL.replace("+aiosqlite", "")
+        db_url = db_url.replace("aiomysql", "pymysql")
+        db_url = db_url.replace("asyncpg", "psycopg2")
+        return db_url
+
     def format_print(self):
         """Print config."""
         # await database.connect()
@@ -58,10 +84,10 @@ class Settings(BaseSettings):
             if key in ["MINIO_SECRET_KEY"]:
                 continue
 
-            # if key in ["REDIS_URL", "MONGODB_URL"]:
-            #     log.append(f"[{key:23s}]: {repr(make_url(val))}")
-            # else:
-            log.append(f"[{key:23s}]: {val}")
+            if key.endswith("URI") or key.endswith("URL") or key.endswith("KEY"):
+                log.append(f"[{key:23s}]: {repr(make_url(val))}")
+            else:
+                log.append(f"[{key:23s}]: {val}")
 
         log.append("--------------------------------------")
         return log
@@ -78,31 +104,4 @@ def get_settings():
     return Settings()
 
 
-@lru_cache()
-def get_s3_client() -> ReportbroS3Client:
-    """Get s3 client."""
-    return create_s3_client()
-
-
-def create_s3_client() -> ReportbroS3Client:
-    """Create s3 client."""
-    tmp_path = settings.STATIC_PATH + "/default_template.json"
-    if settings.DEFAULT_TEMPLATE_PATH:
-        tmp_path = settings.DEFAULT_TEMPLATE_PATH
-
-    with open(tmp_path, "r", encoding="utf8") as fss:
-        defdata = fss.read()
-        defdata = json.loads(defdata)
-
-    return ReportbroS3Client(
-        settings.MINIO_ACCESS_KEY,
-        settings.MINIO_SECRET_KEY,
-        endpoint_url=settings.MINIO_ENDPOINT_URL,
-        region_name=settings.MINIO_SITE_REGION,
-        bucket=settings.MINIO_BUCKET,
-        default_template=defdata,
-    )
-
-
 settings = Settings()
-FONTS_LOADER = ReportFontsLoader(settings.FONTS_PATH)
