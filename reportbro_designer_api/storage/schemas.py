@@ -20,6 +20,5 @@ class PdfStorageKey(BaseModel):
 class PdfStorageData(PdfStorageKey):
     """ReviewResponse."""
 
-    object_key: str = Field("", title="object_key")
     filename: str = Field("", title="filename")
     data: bytes = Field(b"", title="data")

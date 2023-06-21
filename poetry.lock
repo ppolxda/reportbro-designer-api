@@ -479,6 +479,26 @@ url = "https://mirrors.aliyun.com/pypi/simple"
 reference = "aliyun"
 
 [[package]]
+name = "autoflake"
+version = "2.1.1"
+description = "Removes unused imports and unused variables"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "autoflake-2.1.1-py3-none-any.whl", hash = "sha256:94e330a2bcf5ac01384fb2bf98bea60c6383eaa59ea62be486e376622deba985"},
+    {file = "autoflake-2.1.1.tar.gz", hash = "sha256:75524b48d42d6537041d91f17573b8a98cb645642f9f05c7fcc68de10b1cade3"},
+]
+
+[package.dependencies]
+pyflakes = ">=3.0.0"
+tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
+
+[package.source]
+type = "legacy"
+url = "https://mirrors.aliyun.com/pypi/simple"
+reference = "aliyun"
+
+[[package]]
 name = "automat"
 version = "22.10.0"
 description = "Self-service finite-state machines for the programmer on the go."
@@ -5563,4 +5583,4 @@ reference = "aliyun"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<4.0"
-content-hash = "f8cdac8606e302837fe87923620a8c1c790c116748c34e6369edb63af25aa056"
+content-hash = "f02acd7d510506841483dfa48e8d622ca4ce1c817bbfc03b2549b4ba5104b0e4"

@@ -9,41 +9,33 @@
 
 from datetime import datetime
 
-from humps import camelize
-from pydantic import BaseModel as BaseModelSrc
 from pydantic import Field
 
-
-class BaseModel(BaseModelSrc):
-    """BaseModel."""
-
-    class Config:
-        """Config."""
-
-        orm_mode = True
-        alias_generator = camelize
-        allow_population_by_field_name = True
-        # use_enum_values = True
+from reportbro_designer_api.utils.model import BaseModel
 
 
-class TemplatesIdInfo(BaseModel):
-    """TemplatesId."""
+class BaseTemplate(BaseModel):
+    """TemplateList."""
 
-    tid: str = Field("", title="tid")
-    version_id: str = Field("", title="version_id")
-    project: str = Field("", title="project")
+    template_name: str = Field(title="Template name")
+    template_type: str = Field(title="Template type")
 
 
-class TemplateInfo(TemplatesIdInfo):
+class BaseTemplateId(BaseModel):
+    """TemplateList."""
+
+    tid: str = Field(title="Template id")
+    version_id: str = Field(title="Template version id")
+
+
+class TemplateInfo(BaseTemplate, BaseTemplateId):
     """TemplateInfo."""
 
-    # created_at: datetime = Field("", title="创建时间")
-    updated_at: datetime = Field("", title="更新时间")
-    template_name: str = Field("", title="模板名称")
-    template_type: str = Field("", title="模板类型")
+    # created_at: datetime = Field("", title="create at")
+    updated_at: datetime = Field("", title="update at")
 
 
 class TemplateConfigInfo(TemplateInfo):
     """TemplateConfigInfo."""
 
-    report: dict = Field(default_factory=dict, title="模板配置")
+    report: dict = Field(default_factory=dict, title="Templage config")

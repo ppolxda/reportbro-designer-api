@@ -28,7 +28,6 @@ class Settings(BaseSettings):
     TEMPLATES_PATH: str = TEMPLATES_PATH
     FONTS_PATH: str = FONTS_PATH
     DEFAULT_TEMPLATE_PATH: str = ""
-    OPENAPI_URL: str = ""
     PDF_TITLE: str = "report"
     PDF_DEFAULT_FONT: str = "helvetica"
     PDF_LOCALE: str = "en_us"
@@ -55,8 +54,11 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = 10
     DB_ISOLATION_LEVEL: str = "READ UNCOMMITTED"
     PRINT_SQL: bool = False
-    STORAGE_MODE: str = "local"
-    BACKEND_MODE: str = "db"
+
+    BACKEND_MODE: str = "s3"
+    STORAGE_MODE: str = "s3"
+    STORAGE_LOCAL_TTL: int = 30 * 60
+    STORAGE_LOCAL_PATH: str = ""
 
     @property
     def db_url_mark(self):
@@ -81,10 +83,15 @@ class Settings(BaseSettings):
         # await database.connect()
         log = ["--------------------------------------"]
         for key, val in self.dict().items():
-            if key in ["MINIO_SECRET_KEY"]:
+            if key in ["MINIO_SECRET_KEY", "MINIO_ACCESS_KEY"]:
                 continue
 
-            if key.endswith("URI") or key.endswith("URL") or key.endswith("KEY"):
+            if (
+                key.endswith("URI")
+                or key.endswith("URL")
+                or key.endswith("KEY")
+                and "sqlite" not in val
+            ):
                 log.append(f"[{key:23s}]: {repr(make_url(val))}")
             else:
                 log.append(f"[{key:23s}]: {val}")

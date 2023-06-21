@@ -75,6 +75,7 @@ repos:
                 (?x)(
                 ^mdbs/.*
                 | migrate/versions/.*
+                | scripts/otf2ttf.py
                 | .*\.lock$
                 )
 

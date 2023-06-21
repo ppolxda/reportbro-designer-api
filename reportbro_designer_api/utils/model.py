@@ -27,6 +27,7 @@ class BaseModel(pydantic.BaseModel):
     class Config:
         """Config."""
 
+        orm_mode = True
         alias_generator = camelize
         allow_population_by_field_name = True
         # use_enum_values = True
@@ -38,6 +39,7 @@ class GenericModel(generics.GenericModel):
     class Config:
         """Config."""
 
+        orm_mode = True
         alias_generator = camelize
         allow_population_by_field_name = True
         # use_enum_values = True

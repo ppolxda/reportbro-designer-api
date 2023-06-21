@@ -11,7 +11,9 @@ import os
 import pytest
 
 from reportbro_designer_api.clients import create_db_client
+from reportbro_designer_api.clients import create_local_storage
 from reportbro_designer_api.clients import create_s3_client
+from reportbro_designer_api.clients import create_s3_storage
 from reportbro_designer_api.settings import settings
 
 FPATH = os.path.abspath(os.path.dirname(__file__))
@@ -22,7 +24,7 @@ def fixture_debug_env():
     """Config test setting."""
     settings.MINIO_ENDPOINT_URL = "http://127.0.0.1:9000"
     settings.DEFAULT_TEMPLATE_PATH = FPATH + "/data/default_template.json"
-    settings.MINIO_BUCKET = "reportbrotest-test"
+    settings.MINIO_BUCKET = "reportbrotest"
 
 
 @pytest.fixture
@@ -30,6 +32,7 @@ async def sqlite_cli(debug_env):
     """db_client."""
     assert debug_env is None
     settings.DB_URL = "sqlite+aiosqlite:///./reportbro.db"
+    settings.DB_ISOLATION_LEVEL = "READ UNCOMMITTED"
     cli = create_db_client()
     await cli.clean_all()
     try:
@@ -72,8 +75,31 @@ async def mysql_cli(debug_env):
 async def s3cli(debug_env):
     """s3_client."""
     assert debug_env is None
-    settings.DB_ISOLATION_LEVEL = "READ UNCOMMITTED"
     cli = create_s3_client()
+    await cli.clean_all()
+    try:
+        yield cli
+    finally:
+        await cli.clean_all()
+
+
+@pytest.fixture
+async def s3storage(debug_env):
+    """s3_client."""
+    assert debug_env is None
+    cli = create_s3_storage()
+    await cli.clean_all()
+    try:
+        yield cli
+    finally:
+        await cli.clean_all()
+
+
+@pytest.fixture
+async def localstorage(debug_env):
+    """s3_client."""
+    assert debug_env is None
+    cli = create_local_storage()
     await cli.clean_all()
     try:
         yield cli

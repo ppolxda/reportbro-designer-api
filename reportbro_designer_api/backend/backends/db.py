@@ -24,8 +24,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import load_only
 
-from . import models as mm
-from . import schemas as sa
+from .. import models as mm
+from .. import schemas as sa
 from .base import BackendBase
 
 
@@ -83,9 +83,6 @@ def provide_db(func: Callable[..., Awaitable[RT]]) -> Callable[..., Awaitable[RT
 
 class DBBackendClient(object):
     """DBBackendClient."""
-
-    TEMPLATES_PREFIX = "templates"
-    REVIEW_PREFIX = "review"
 
     def __init__(
         self,
@@ -312,7 +309,7 @@ class DBBackendClient(object):
         report: dict,
         project: Optional[str] = None,
         session: Optional[AsyncSession] = None,
-    ) -> sa.TemplatesIdInfo:
+    ) -> sa.BaseTemplateId:
         """Put templates."""
         assert session
         # 更新或创建template
@@ -348,10 +345,9 @@ class DBBackendClient(object):
             )
 
         session.add_all(add_list)
-        return sa.TemplatesIdInfo(
+        return sa.BaseTemplateId(
             tid=tid,
             version_id=version_id,
-            project=project,
         )
 
     @provide_db
@@ -492,7 +488,7 @@ class DBBackend(DBBackendClient, BackendBase):
         report: dict,
         tid: Optional[str] = None,
         project: Optional[str] = None,
-    ) -> sa.TemplatesIdInfo:
+    ) -> sa.BaseTemplateId:
         """Put templates."""
         if not report:
             if self.default_template:

@@ -12,35 +12,22 @@ from typing import Union
 
 from pydantic import Field
 
+from reportbro_designer_api.backend import schemas as ss
 from reportbro_designer_api.utils.model import BaseModel
 from reportbro_designer_api.utils.model import DataResponse
 from reportbro_designer_api.utils.model import ListResponse
 
 
-class BaseTemplate(BaseModel):
-    """TemplateList."""
-
-    template_name: str = Field(title="Template name")
-    template_type: str = Field(title="Template type")
-
-
-class BaseTemplateId(BaseModel):
-    """TemplateList."""
-
-    tid: str = Field(title="Template id")
-    version_id: str = Field(title="Template version id")
-
-
-class TemplateListData(BaseTemplate, BaseTemplateId):
+class TemplateListData(ss.TemplateInfo):
     """TemplateList."""
 
     template_designer_page: str = Field(title="Template Designer Page")
 
 
-class TemplateDescData(TemplateListData):
+class TemplateDescData(ss.TemplateConfigInfo):
     """TemplateList."""
 
-    report: dict = Field(title="Template Data")
+    template_designer_page: str = Field(title="Template Designer Page")
 
 
 class TemplateDownLoadData(BaseModel):
@@ -50,7 +37,7 @@ class TemplateDownLoadData(BaseModel):
     download_url: str = Field(title="Pdf download url")
 
 
-class RequestCreateTemplate(BaseTemplate):
+class RequestCreateTemplate(ss.BaseTemplate):
     """RequestCreateTemplate."""
 
 

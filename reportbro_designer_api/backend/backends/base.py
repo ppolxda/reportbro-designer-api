@@ -14,7 +14,7 @@ from uuid import uuid1
 
 import shortuuid
 
-from . import schemas as sa
+from .. import schemas as sa
 
 
 class BackendBase(ABC):
@@ -97,7 +97,7 @@ class BackendBase(ABC):
         report: dict,
         tid: Optional[str] = None,
         project: Optional[str] = None,
-    ) -> sa.TemplatesIdInfo:
+    ) -> sa.BaseTemplateId:
         """Put templates."""
         raise NotImplementedError
 

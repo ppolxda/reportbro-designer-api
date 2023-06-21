@@ -12,7 +12,15 @@ class ReportbroError(Exception):
     """ReportbroError."""
 
 
-class TemplageNotFoundError(Exception):
+class StorageError(ReportbroError):
+    """StorageError."""
+
+
+class BackendError(ReportbroError):
+    """BackendError."""
+
+
+class TemplageNotFoundError(BackendError):
     """TemplageNotFoundError."""
 
 

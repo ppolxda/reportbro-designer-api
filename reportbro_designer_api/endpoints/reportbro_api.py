@@ -33,15 +33,13 @@ from reportbro import ReportBroError
 from starlette.status import HTTP_200_OK
 from starlette.status import HTTP_400_BAD_REQUEST
 
-from ..backend import base as ss
-from ..backend.base import BackendBase
-
-# from ..clients import get_storage
+from ..backend.backends.base import BackendBase
 from ..clients import FONTS_LOADER
+from ..clients import StorageMange
 from ..clients import get_meth_cli
+from ..clients import get_storage_mange
 from ..errors import TemplageNotFoundError
 from ..settings import settings
-from ..storage.base import StorageBase
 from ..utils.logger import LOGGER
 from ..utils.model import ErrorResponse
 from ..utils.report import ReportPdf
@@ -158,7 +156,7 @@ async def get_templates_data(
         data=TemplateDescData(
             **{
                 **template.dict(),
-                "report": template.template_body,
+                "report": template.report,
                 "template_designer_page": request.url_for(
                     "Templates Designer page", tid=template.tid
                 ),
@@ -179,12 +177,12 @@ async def create_templates(
     client: BackendBase = Depends(get_meth_cli),
 ):
     """Templates Manage page."""
-    key = client.gen_uuid_object_key()
-    rrr = await client.put_templates(key, req.template_name, req.template_type, {})
+    rrr = await client.put_template(req.template_name, req.template_type, {})
     return TemplateDataResponse(
         code=HTTP_200_OK,
         error="ok",
         data=TemplateListData(
+            updated_at=datetime.now(),
             template_name=req.template_name,
             template_type=req.template_type,
             tid=rrr.tid,
@@ -216,16 +214,20 @@ async def save_templates(
         )
 
     obj = await client.get_template(tid)
-    rrr = await client.put_templates(
-        tid,
-        obj.template_name,
-        obj.template_type,
-        req.report,
+    if not obj:
+        raise TemplageNotFoundError("template not found")
+
+    rrr = await client.put_template(
+        tid=tid,
+        template_name=obj.template_name,
+        template_type=obj.template_type,
+        report=req.report,
     )
     return TemplateDataResponse(
         code=HTTP_200_OK,
         error="ok",
         data=TemplateListData(
+            updated_at=datetime.now(),
             template_name=obj.template_name,
             template_type=obj.template_type,
             tid=tid,
@@ -251,6 +253,8 @@ async def clone_templates(
 ):
     """Clone Templates."""
     obj = await client.get_template(req.from_tid, req.from_version_id)
+    if not obj:
+        raise TemplageNotFoundError("template not found")
 
     if not req.from_version_id:
         req.from_version_id = obj.version_id
@@ -262,16 +266,20 @@ async def clone_templates(
         )
 
     obj_src = await client.get_template(tid)
+    if not obj_src:
+        raise TemplageNotFoundError("template not found")
+
     rrr = await client.put_template(
-        tid,
-        obj_src.template_name,
-        obj_src.template_type,
-        obj.template_body,
+        tid=tid,
+        template_name=obj_src.template_name,
+        template_type=obj_src.template_type,
+        report=obj.report,
     )
     return TemplateDataResponse(
         code=HTTP_200_OK,
         error="ok",
         data=TemplateListData(
+            updated_at=datetime.now(),
             template_name=obj_src.template_name,
             template_type=obj_src.template_type,
             tid=tid,
@@ -301,301 +309,302 @@ async def delete_templates(
     return ErrorResponse(code=HTTP_200_OK, error="ok")
 
 
-# # ----------------------------------------------
-# #        PDF REPORT Generate
-# # ----------------------------------------------
+# ----------------------------------------------
+#        PDF REPORT Generate
+# ----------------------------------------------
 
 
-# def gen_file_from_report(
-#     output_format, report_definition, data, is_test_data, disabled_fill
-# ):
-#     """Review Templates Generate."""
-#     # all data needed for report preview is sent in the initial PUT request, it contains
-#     # the format (pdf or xlsx), the report itself (report_definition), the data (test data
-#     # defined within parameters in the Designer) and is_test_data flag (always True
-#     # when request is sent from Designer)
-#     if output_format not in ("pdf", "xlsx"):
-#         raise HTTPException(
-#             status_code=HTTP_400_BAD_REQUEST,
-#             detail="outputFormat parameter missing or invalid",
-#         )
+def gen_file_from_report(
+    output_format, report_definition, data, is_test_data, disabled_fill
+):
+    """Review Templates Generate."""
+    # all data needed for report preview is sent in the initial PUT request, it contains
+    # the format (pdf or xlsx), the report itself (report_definition), the data (test data
+    # defined within parameters in the Designer) and is_test_data flag (always True
+    # when request is sent from Designer)
+    if output_format not in ("pdf", "xlsx"):
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="outputFormat parameter missing or invalid",
+        )
 
-#     try:
-#         if not disabled_fill:
-#             fill_default(report_definition, data)
+    try:
+        if not disabled_fill:
+            fill_default(report_definition, data)
 
-#         report = ReportPdf(report_definition, data, FONTS_LOADER, is_test_data)
-#     except ReportBroError as ex:
-#         LOGGER.warning(
-#             "failed to initialize report: %s %s", str(ex), traceback.format_exc()
-#         )
-#         raise HTTPException(
-#             status_code=HTTP_400_BAD_REQUEST,
-#             detail=f"failed to initialize report[{ex}]",
-#         ) from ex
+        report = ReportPdf(report_definition, data, FONTS_LOADER, is_test_data)
+    except ReportBroError as ex:
+        LOGGER.warning(
+            "failed to initialize report: %s %s", str(ex), traceback.format_exc()
+        )
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"failed to initialize report[{ex}]",
+        ) from ex
 
-#     if report.report.errors:
-#         # return list of errors in case report contains errors, e.g. duplicate parameters.
-#         # with this information ReportBro Designer can select object containing errors,
-#         # highlight erroneous fields and display error messages
-#         raise HTTPException(
-#             status_code=HTTP_400_BAD_REQUEST,
-#             detail=json.dumps(report.report.errors),
-#         )
+    if report.report.errors:
+        # return list of errors in case report contains errors, e.g. duplicate parameters.
+        # with this information ReportBro Designer can select object containing errors,
+        # highlight erroneous fields and display error messages
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=json.dumps(report.report.errors),
+        )
 
-#     start = timer()
-#     now = datetime.now().strftime("%Y%m%d%H%M%S")
-#     try:
-#         if output_format == "pdf":
-#             report_file = report.generate_pdf(title=settings.PDF_TITLE)
-#             filename = "report-" + str(now) + ".pdf"
-#             return filename, report_file
-#         else:
-#             report_file = report.generate_xlsx()
-#             filename = "report-" + str(now) + ".xlsx"
-#             return filename, report_file
-#     except ReportBroError as ex:
-#         # in case an error occurs during report report generation
-#         # a ReportBroError exception is thrown
-#         # to stop processing. We return this error within a list so the error can be
-#         # processed by ReportBro Designer.
-#         raise HTTPException(
-#             status_code=HTTP_400_BAD_REQUEST,
-#             detail=f"failed to generation report[{ex}]",
-#         ) from ex
-#     finally:
-#         end = timer()
-#         LOGGER.info("pdf generated in %.3f seconds", (end - start))
-
-
-# def read_file_in_s3(output_format, key, client: StorageBase):
-#     """Read file in s3."""
-#     if output_format not in ("pdf", "xlsx"):
-#         raise HTTPException(
-#             status_code=HTTP_400_BAD_REQUEST,
-#             detail="outputFormat parameter missing or invalid",
-#         )
-
-#     if key.startswith("key:"):
-#         key = key[4:]
-
-#     pdfdata = client.get_review(output_format, key)
-#     filename = pdfdata.filename
-#     report_file = pdfdata.data
-
-#     if output_format == "pdf":
-#         response = StreamingResponse(
-#             BytesIO(report_file),
-#             media_type="application/pdf",
-#             headers={"Content-Disposition": f'inline; filename="{filename}"'},
-#         )
-#     else:
-#         response = StreamingResponse(
-#             BytesIO(report_file),
-#             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-#             headers={"Content-Disposition": f'inline; filename="{filename}"'},
-#         )
-
-#     return response
+    start = timer()
+    now = datetime.now().strftime("%Y%m%d%H%M%S")
+    try:
+        if output_format == "pdf":
+            report_file = report.generate_pdf(title=settings.PDF_TITLE)
+            filename = "report-" + str(now) + ".pdf"
+            return filename, report_file
+        else:
+            report_file = report.generate_xlsx()
+            filename = "report-" + str(now) + ".xlsx"
+            return filename, report_file
+    except ReportBroError as ex:
+        # in case an error occurs during report report generation
+        # a ReportBroError exception is thrown
+        # to stop processing. We return this error within a list so the error can be
+        # processed by ReportBro Designer.
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"failed to generation report[{ex}]",
+        ) from ex
+    finally:
+        end = timer()
+        LOGGER.info("pdf generated in %.3f seconds", (end - start))
 
 
-# @router.put(
-#     "/templates/review",
-#     tags=GEN_TAGS,
-#     name="Generate preview file from template",
-# )
-# async def review_templates_gen(
-#     req: RequestReviewTemplate,
-#     disabled_fill: bool = Query(
-#         default=False, title="Disable fill empty fields for input data"
-#     ),
-#     storage: StorageBase = Depends(get_storage),
-# ):
-#     """Review Templates Generate."""
-#     filename, report_file = gen_file_from_report(
-#         req.output_format, req.report, req.data, req.is_test_data, disabled_fill
-#     )
-#     assert report_file
-#     s3file = storage.put_review(req.output_format, report_file, filename)
-#     key = "key:" + str(s3file.version_id)
-#     return PlainTextResponse(key)
+async def read_file_in_s3(output_format, key, client: StorageMange):
+    """Read file in s3."""
+    if output_format not in ("pdf", "xlsx"):
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="outputFormat parameter missing or invalid",
+        )
+
+    filename, report_file = await client.get_file(key)
+
+    if output_format == "pdf":
+        response = StreamingResponse(
+            BytesIO(report_file),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'inline; filename="{filename}"'},
+        )
+    else:
+        response = StreamingResponse(
+            BytesIO(report_file),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'inline; filename="{filename}"'},
+        )
+
+    return response
 
 
-# @router.get(
-#     "/templates/review",
-#     tags=GEN_TAGS,
-#     name="Get generate preview file",
-# )
-# async def review_templates(
-#     output_format: str = Query(
-#         "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
-#     ),
-#     key: str = Query(title="File Key", min_length=16),
-#     storage: StorageBase = Depends(get_storage),
-# ):
-#     """Review Templates."""
-#     return read_file_in_s3(output_format, key, storage)
+@router.put(
+    "/templates/review",
+    tags=GEN_TAGS,
+    name="Generate preview file from template",
+)
+async def review_templates_gen(
+    req: RequestReviewTemplate,
+    disabled_fill: bool = Query(
+        default=False, title="Disable fill empty fields for input data"
+    ),
+    storage: StorageMange = Depends(get_storage_mange),
+):
+    """Review Templates Generate."""
+    filename, report_file = gen_file_from_report(
+        req.output_format, req.report, req.data, req.is_test_data, disabled_fill
+    )
+    assert report_file
+    key = await storage.put_file(filename, report_file)
+    return PlainTextResponse(key)
 
 
-# # ----------------------------------------------
-# #        PDF REPORT Multiple Generate
-# # ----------------------------------------------
+@router.get(
+    "/templates/review",
+    tags=GEN_TAGS,
+    name="Get generate preview file",
+)
+async def review_templates(
+    output_format: str = Query(
+        "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
+    ),
+    key: str = Query(title="File Key", min_length=16),
+    storage: StorageMange = Depends(get_storage_mange),
+):
+    """Review Templates."""
+    r = await read_file_in_s3(output_format, key, storage)
+    return r
 
 
-# @router.put(
-#     "/templates/multi/generate",
-#     tags=GEN_TAGS,
-#     name="Generate file from multiple template(PDF Only)",
-#     response_model=TemplateDownLoadResponse,
-# )
-# async def generation_templates_multi_gen(
-#     request: Request,
-#     req: RequestMultiGenerateTemplate,
-#     disabled_fill: bool = Query(
-#         default=False, title="Disable fill empty fields for input data"
-#     ),
-#     client: BackendBase = Depends(get_meth_cli),
-#     storage: StorageBase = Depends(get_storage),
-# ):
-#     """Review Templates Generate."""
-#     if not req.templates:
-#         raise HTTPException(
-#             status_code=HTTP_400_BAD_REQUEST,
-#             detail="templates is empty",
-#         )
-
-#     filename = ""
-#     merge_file = PyPDF2.PdfFileMerger()
-#     for i in req.templates:
-#         if isinstance(i, RequestGenerateUrlTemplate):
-#             if i.pdf_url.startswith("file://"):
-#                 with open(i.pdf_url[7:], "rb") as fss:
-#                     data = fss.read()
-#                 filename, report_file = os.path.basename(i.pdf_url), data
-#             else:
-#                 data = requests.get(i.pdf_url, timeout=settings.DOWNLOAD_TIMEOUT)
-#                 filename, report_file = os.path.basename(i.pdf_url), data.content
-
-#             if not is_pdf(report_file):
-#                 raise HTTPException(
-#                     status_code=HTTP_400_BAD_REQUEST,
-#                     detail="pdf_url is not pdf file",
-#                 )
-#         elif isinstance(i, RequestGenerateDataTemplate):
-#             obj = await client.get_templates(i.tid, i.version_id)
-#             filename, report_file = gen_file_from_report(
-#                 req.output_format,
-#                 obj.template_body,
-#                 i.data,
-#                 False,
-#                 disabled_fill,
-#             )
-#         else:
-#             raise HTTPException(
-#                 status_code=HTTP_400_BAD_REQUEST,
-#                 detail="templates is invaild",
-#             )
-
-#         assert report_file
-#         merge_file.append(
-#             PyPDF2.PdfFileReader(stream=BytesIO(initial_bytes=report_file))
-#         )
-
-#     rrr = BytesIO()
-#     merge_file.write(rrr)
-#     rrr.seek(0)
-
-#     assert filename
-#     s3file = storage.put_review(req.output_format, rrr.read(), filename)
-#     key = "key:" + str(s3file.version_id)
-#     return TemplateDownLoadResponse(
-#         code=HTTP_200_OK,
-#         error="ok",
-#         data=TemplateDownLoadData(
-#             download_key=key,
-#             download_url=request.url_for("Get generate file from multiple template")
-#             + "?"
-#             + urlencode(
-#                 {
-#                     "key": key,
-#                 }
-#             ),
-#         ),
-#     )
+# ----------------------------------------------
+#        PDF REPORT Multiple Generate
+# ----------------------------------------------
 
 
-# @router.get(
-#     "/templates/multi/generate",
-#     tags=GEN_TAGS,
-#     name="Get generate file from multiple template",
-# )
-# async def generation_templates_multi(
-#     key: str = Query(title="File Key", min_length=16),
-#     storage: StorageBase = Depends(get_storage),
-# ):
-#     """Review Templates."""
-#     return read_file_in_s3("pdf", key, storage)
+@router.put(
+    "/templates/multi/generate",
+    tags=GEN_TAGS,
+    name="Generate file from multiple template(PDF Only)",
+    response_model=TemplateDownLoadResponse,
+)
+async def generation_templates_multi_gen(
+    request: Request,
+    req: RequestMultiGenerateTemplate,
+    disabled_fill: bool = Query(
+        default=False, title="Disable fill empty fields for input data"
+    ),
+    client: BackendBase = Depends(get_meth_cli),
+    storage: StorageMange = Depends(get_storage_mange),
+):
+    """Review Templates Generate."""
+    if not req.templates:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="templates is empty",
+        )
+
+    filename = ""
+    merge_file = PyPDF2.PdfFileMerger()
+    for i in req.templates:
+        if isinstance(i, RequestGenerateUrlTemplate):
+            if i.pdf_url.startswith("file://"):
+                with open(i.pdf_url[7:], "rb") as fss:
+                    data = fss.read()
+                filename, report_file = os.path.basename(i.pdf_url), data
+            else:
+                data = requests.get(i.pdf_url, timeout=settings.DOWNLOAD_TIMEOUT)
+                filename, report_file = os.path.basename(i.pdf_url), data.content
+
+            if not is_pdf(report_file):
+                raise HTTPException(
+                    status_code=HTTP_400_BAD_REQUEST,
+                    detail="pdf_url is not pdf file",
+                )
+        elif isinstance(i, RequestGenerateDataTemplate):
+            templage = await client.get_template(i.tid, i.version_id)
+            if not templage:
+                raise TemplageNotFoundError("template not found")
+
+            filename, report_file = gen_file_from_report(
+                req.output_format,
+                templage.report,
+                i.data,
+                False,
+                disabled_fill,
+            )
+        else:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="templates is invaild",
+            )
+
+        assert report_file
+        merge_file.append(
+            PyPDF2.PdfFileReader(stream=BytesIO(initial_bytes=report_file))
+        )
+
+    rrr = BytesIO()
+    merge_file.write(rrr)
+    rrr.seek(0)
+
+    assert filename
+    download_key = await storage.put_file(filename, rrr.read())
+    return TemplateDownLoadResponse(
+        code=HTTP_200_OK,
+        error="ok",
+        data=TemplateDownLoadData(
+            download_key=download_key,
+            download_url=request.url_for("Get generate file from multiple template")
+            + "?"
+            + urlencode(
+                {
+                    "key": download_key,
+                }
+            ),
+        ),
+    )
 
 
-# # ----------------------------------------------
-# #        PDF REPORT Generate
-# # ----------------------------------------------
+@router.get(
+    "/templates/multi/generate",
+    tags=GEN_TAGS,
+    name="Get generate file from multiple template",
+)
+async def generation_templates_multi(
+    key: str = Query(title="File Key", min_length=16),
+    storage: StorageMange = Depends(get_storage_mange),
+):
+    """Review Templates."""
+    r = read_file_in_s3("pdf", key, storage)
+    return r
 
 
-# @router.put(
-#     "/templates/{tid}/generate",
-#     tags=GEN_TAGS,
-#     name="Generate file from template",
-#     response_model=TemplateDownLoadResponse,
-# )
-# async def generation_templates_gen(
-#     request: Request,
-#     req: RequestGenerateTemplate,
-#     tid: str = Path(title="Template id"),
-#     version_id: Optional[str] = Query(
-#         None, title="Template version id", alias="versionId"
-#     ),
-#     disabled_fill: bool = Query(
-#         default=False, title="Disable fill empty fields for input data"
-#     ),
-#     client: BackendBase = Depends(get_meth_cli),
-#     storage: StorageBase = Depends(get_storage),
-# ):
-#     """Review Templates Generate."""
-#     obj = await client.get_templates(tid, version_id)
-#     filename, report_file = gen_file_from_report(
-#         req.output_format, obj.template_body, req.data, False, disabled_fill
-#     )
-#     assert report_file
-#     s3file = storage.put_review(req.output_format, report_file, filename)
-#     key = "key:" + str(s3file.version_id)
-#     return TemplateDownLoadResponse(
-#         code=HTTP_200_OK,
-#         error="ok",
-#         data=TemplateDownLoadData(
-#             download_key=key,
-#             download_url=request.url_for("Get generate file", tid=tid)
-#             + "?"
-#             + urlencode(
-#                 {
-#                     "key": key,
-#                 }
-#             ),
-#         ),
-#     )
+# ----------------------------------------------
+#        PDF REPORT Generate
+# ----------------------------------------------
 
 
-# @router.get(
-#     "/templates/{tid}/generate",
-#     tags=GEN_TAGS,
-#     name="Get generate file",
-# )
-# async def generation_templates(
-#     output_format: str = Query(
-#         "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
-#     ),
-#     key: str = Query(title="File Key", min_length=16),
-#     storage: StorageBase = Depends(get_storage),
-# ):
-#     """Review Templates."""
-#     return read_file_in_s3(output_format, key, storage)
+@router.put(
+    "/templates/{tid}/generate",
+    tags=GEN_TAGS,
+    name="Generate file from template",
+    response_model=TemplateDownLoadResponse,
+)
+async def generation_templates_gen(
+    request: Request,
+    req: RequestGenerateTemplate,
+    tid: str = Path(title="Template id"),
+    version_id: Optional[str] = Query(
+        None, title="Template version id", alias="versionId"
+    ),
+    disabled_fill: bool = Query(
+        default=False, title="Disable fill empty fields for input data"
+    ),
+    client: BackendBase = Depends(get_meth_cli),
+    storage: StorageMange = Depends(get_storage_mange),
+):
+    """Review Templates Generate."""
+    templage = await client.get_template(tid, version_id)
+    if not templage:
+        raise TemplageNotFoundError("template not found")
+
+    filename, report_file = gen_file_from_report(
+        req.output_format, templage.report, req.data, False, disabled_fill
+    )
+    assert report_file
+    download_key = await storage.put_file(filename, report_file)
+    return TemplateDownLoadResponse(
+        code=HTTP_200_OK,
+        error="ok",
+        data=TemplateDownLoadData(
+            download_key=download_key,
+            download_url=request.url_for("Get generate file", tid=tid)
+            + "?"
+            + urlencode(
+                {
+                    "key": download_key,
+                }
+            ),
+        ),
+    )
+
+
+@router.get(
+    "/templates/{tid}/generate",
+    tags=GEN_TAGS,
+    name="Get generate file",
+)
+async def generation_templates(
+    output_format: str = Query(
+        "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
+    ),
+    key: str = Query(title="File Key", min_length=16),
+    storage: StorageMange = Depends(get_storage_mange),
+):
+    """Review Templates."""
+    r = read_file_in_s3(output_format, key, storage)
+    return r

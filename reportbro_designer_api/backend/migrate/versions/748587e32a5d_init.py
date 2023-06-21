@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 """init
 
 Revision ID: 748587e32a5d
-Revises: 
+Revises:
 Create Date: 2023-06-21 19:14:04.398595
 
 """

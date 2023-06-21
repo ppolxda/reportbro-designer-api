@@ -8,9 +8,9 @@
 """
 import pytest
 
-from reportbro_designer_api.backend.base import BackendBase
-from reportbro_designer_api.backend.db import DBBackend
-from reportbro_designer_api.backend.s3 import S3Backend
+from reportbro_designer_api.backend import BackendBase
+from reportbro_designer_api.backend import DBBackend
+from reportbro_designer_api.backend import S3Backend
 
 # from reportbro_designer_api.backend.s3 import ClientError
 
@@ -18,7 +18,7 @@ from reportbro_designer_api.backend.s3 import S3Backend
 async def backend_test(backendcli: BackendBase):
     """Test reportbro DBBackend api function."""
     body_a = {"aaa": ""}
-    body_b = {"aaa": ""}
+    body_b = {"bbb": ""}
 
     _id = backendcli.gen_uuid()
     # check version_id by same id
@@ -39,10 +39,10 @@ async def backend_test(backendcli: BackendBase):
     )
 
     # check template body and matedate
-    data_a = await backendcli.get_template(rrr_b.tid)
-    data_b = await backendcli.get_template(rrr_a.tid, rrr_a.version_id)
+    data_b = await backendcli.get_template(rrr_b.tid)
+    data_a = await backendcli.get_template(rrr_a.tid, rrr_a.version_id)
     assert data_a and data_a.report == body_a
-    assert data_b and data_b.report == body_b and data_b.version_id == rrr_a.version_id
+    assert data_b and data_b.report == body_b and data_b.version_id == rrr_b.version_id
     assert (
         data_b.template_name == data_a.template_name
         and data_b.template_type != data_a.template_type
@@ -115,6 +115,12 @@ async def test_s3_api(s3cli: S3Backend):
 async def test_pgsql_api(pgsql_cli: DBBackend):
     """Test s3 reportbro api function."""
     await backend_test(pgsql_cli)
+
+
+@pytest.mark.asyncio
+async def test_mysql_api(mysql_cli: DBBackend):
+    """Test s3 reportbro api function."""
+    await backend_test(mysql_cli)
 
 
 @pytest.mark.asyncio

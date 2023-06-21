@@ -16,14 +16,14 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm.session import sessionmaker
 
-from .backend.base import BackendBase
-from .backend.db import DBBackend
-from .backend.s3 import S3Backend
+from .backend import BackendBase
+from .backend import DBBackend
+from .backend import S3Backend
 from .errors import ClientParamsError
 from .settings import settings
-
-# from .storage.storages import LocalStorage
-# from .storage.storages import S3Storage
+from .storage import LocalStorage
+from .storage import S3Storage
+from .storage import StorageMange
 from .utils.report import ReportFontsLoader
 
 FONTS_LOADER = ReportFontsLoader(settings.FONTS_PATH)
@@ -151,17 +151,43 @@ def get_meth_cli() -> BackendBase:
         raise ClientParamsError(f"Get Client Meth Error [{settings.BACKEND_MODE}]")
 
 
-# @lru_cache()
-# def get_storage():
-#     """获取存储位置."""
-#     if settings.IS_LOCAL_STORAGE:
-#         return LocalStorage()
-#     else:
-#         return S3Storage(
-#             settings.MINIO_ACCESS_KEY,
-#             settings.MINIO_SECRET_KEY,
-#             endpoint_url=settings.MINIO_ENDPOINT_URL,
-#             region_name=settings.MINIO_SITE_REGION,
-#             bucket=settings.MINIO_BUCKET,
-#             default_template={},
-#         )
+def create_local_storage():
+    """Create local storage."""
+    return LocalStorage(
+        settings.STORAGE_LOCAL_PATH,
+        settings.STORAGE_LOCAL_TTL,
+    )
+
+
+def create_s3_storage():
+    """Create S3 storage."""
+    return S3Storage(
+        settings.MINIO_ACCESS_KEY,
+        settings.MINIO_SECRET_KEY,
+        endpoint_url=settings.MINIO_ENDPOINT_URL,
+        region_name=settings.MINIO_SITE_REGION,
+        bucket=settings.MINIO_BUCKET,
+    )
+
+
+@lru_cache()
+def get_storage_cli():
+    """Get Storage client."""
+    if settings.STORAGE_MODE == "local":
+        return create_local_storage()
+    elif settings.STORAGE_MODE == "s3":
+        return create_s3_storage()
+    else:
+        raise TypeError("STORAGE_MODE invaild")
+
+
+def create_s3_storage_manage():
+    """Create S3 storage manage."""
+    cli = get_storage_cli()
+    return StorageMange(cli)
+
+
+@lru_cache()
+def get_storage_mange():
+    """Get S3 storage manage."""
+    return create_s3_storage_manage()

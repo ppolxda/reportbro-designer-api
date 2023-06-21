@@ -1,15 +1,4 @@
 version: '3.4'
-x-reportbro-common:
-  &reportbro-common
-  environment:
-    &reportbro-common-env
-    SHOW_DOC: ${SHOW_DOC:-true}
-    # IS_DEBUG: ${IS_DEBUG:-true}
-
-    MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-    MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
-    MINIO_SITE_NAME: ${MINIO_SITE_NAME:-reportbro-s3}
-    MINIO_SITE_REGION: ${MINIO_SECRET_KEY:-us-west-1}
 
 services:
   reportbro-server:
@@ -27,12 +16,12 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: reportbro
-      # MYSQL_USER: your_username
-      # MYSQL_PASSWORD: your_password
+      # MYSQL_USER: root
+      # MYSQL_PASSWORD: root
     ports:
       - 3306:3306
     volumes:
-      - ./data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
 
 volumes:
-  minio-data:
+  mysql-data:

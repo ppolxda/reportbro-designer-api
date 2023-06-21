@@ -23,7 +23,7 @@ from fastapi.templating import Jinja2Templates
 
 from reportbro_designer_api.settings import settings
 
-from ..backend.base import BackendBase
+from ..backend.backends.base import BackendBase
 from ..clients import FONTS_LOADER
 from ..clients import get_meth_cli
 from ..errors import TemplageNotFoundError
