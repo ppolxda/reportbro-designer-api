@@ -52,10 +52,8 @@ def backend_test():
     # create templates
     tid = str(uuid1())
     response = client.put(
-        "/api/templates",
-        json=ss.RequestCreateTemplate(
-            tid=tid, template_name="a", template_type="b"
-        ).dict(),
+        f"/api/templates/{tid}",
+        json=ss.RequestCreateTemplate(template_name="a", template_type="b").dict(),
     )
     assert response.status_code == 200
     rrr_a = ss.TemplateDataResponse(**response.json()).data
@@ -135,10 +133,8 @@ def backend_test():
     # check tid 2
     tid2 = str(uuid1())
     response = client.put(
-        "/api/templates",
-        json=ss.RequestCreateTemplate(
-            tid=tid2, template_name="a", template_type="b"
-        ).dict(),
+        f"/api/templates/{tid2}",
+        json=ss.RequestCreateTemplate(template_name="a", template_type="b").dict(),
     )
     assert response.status_code == 200
     rrr_c = ss.TemplateDataResponse(**response.json()).data
@@ -248,10 +244,8 @@ def backend_test():
 
     tid3 = str(uuid1())
     response = client.put(
-        "/api/templates",
-        json=ss.RequestCreateTemplate(
-            tid=tid3, template_name="a", template_type="b"
-        ).dict(),
+        f"/api/templates/{tid3}",
+        json=ss.RequestCreateTemplate(template_name="a", template_type="b").dict(),
     )
     assert response.status_code == 200
     rrr_clone_a = ss.TemplateDataResponse(**response.json()).data
@@ -352,7 +346,7 @@ def fixture_default_template():
     response = client.put(
         "/api/templates",
         json=ss.RequestCreateTemplate(
-            tid=None, template_name="test", template_type="test"
+            template_name="test", template_type="test"
         ).dict(),
     )
     assert response.status_code == 200

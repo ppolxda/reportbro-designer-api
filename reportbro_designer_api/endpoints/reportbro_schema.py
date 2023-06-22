@@ -40,8 +40,6 @@ class TemplateDownLoadData(BaseModel):
 class RequestCreateTemplate(ss.BaseTemplate):
     """RequestCreateTemplate."""
 
-    tid: Optional[str] = Field(None, title="Template id")
-
 
 class RequestUploadTemplate(BaseModel):
     """RequestUploadTemplate."""

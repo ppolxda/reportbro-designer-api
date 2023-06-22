@@ -177,9 +177,37 @@ async def create_templates(
     client: BackendBase = Depends(get_meth_cli),
 ):
     """Templates Manage page."""
-    rrr = await client.put_template(
-        req.template_name, req.template_type, {}, tid=req.tid
+    rrr = await client.put_template(req.template_name, req.template_type, {})
+    return TemplateDataResponse(
+        code=HTTP_200_OK,
+        error="ok",
+        data=TemplateListData(
+            updated_at=datetime.now(),
+            template_name=req.template_name,
+            template_type=req.template_type,
+            tid=rrr.tid,
+            version_id=rrr.version_id,
+            template_designer_page=request.url_for(
+                "Templates Designer page", tid=rrr.tid
+            ),
+        ),
     )
+
+
+@router.put(
+    "/templates/{tid}",
+    tags=TAGS,
+    name="Create Templates, use own tid",
+    response_model=TemplateDataResponse,
+)
+async def create_templates_tid(
+    request: Request,
+    req: RequestCreateTemplate,
+    tid: str = Path(title="Template id"),
+    client: BackendBase = Depends(get_meth_cli),
+):
+    """Templates Manage page."""
+    rrr = await client.put_template(req.template_name, req.template_type, {}, tid=tid)
     return TemplateDataResponse(
         code=HTTP_200_OK,
         error="ok",
