@@ -635,13 +635,13 @@ reference = "aliyun"
 
 [[package]]
 name = "boto3-stubs"
-version = "1.26.157"
-description = "Type annotations for boto3 1.26.157 generated with mypy-boto3-builder 7.14.5"
+version = "1.26.158"
+description = "Type annotations for boto3 1.26.158 generated with mypy-boto3-builder 7.14.5"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "boto3-stubs-1.26.157.tar.gz", hash = "sha256:27576908c62e3104db8d841a5a4c329d661c858d3daabf1e41f5299bd9a20509"},
-    {file = "boto3_stubs-1.26.157-py3-none-any.whl", hash = "sha256:40fd97a3a6c2d11627e9fa51c01145100e57fa25596c7360b1206ae75f5403c3"},
+    {file = "boto3-stubs-1.26.158.tar.gz", hash = "sha256:3998ba60130b15b1198222f655bf9604f125716b87ed7c67b2af1d4a05a1d197"},
+    {file = "boto3_stubs-1.26.158-py3-none-any.whl", hash = "sha256:1df2851c6ef593f402f6f7728a7f5846d540daf21b4b3e85037ee362ef03ce7a"},
 ]
 
 [package.dependencies]
@@ -691,7 +691,7 @@ backup-gateway = ["mypy-boto3-backup-gateway (>=1.26.0,<1.27.0)"]
 backupstorage = ["mypy-boto3-backupstorage (>=1.26.0,<1.27.0)"]
 batch = ["mypy-boto3-batch (>=1.26.0,<1.27.0)"]
 billingconductor = ["mypy-boto3-billingconductor (>=1.26.0,<1.27.0)"]
-boto3 = ["boto3 (==1.26.157)", "botocore (==1.29.157)"]
+boto3 = ["boto3 (==1.26.158)", "botocore (==1.29.158)"]
 braket = ["mypy-boto3-braket (>=1.26.0,<1.27.0)"]
 budgets = ["mypy-boto3-budgets (>=1.26.0,<1.27.0)"]
 ce = ["mypy-boto3-ce (>=1.26.0,<1.27.0)"]
@@ -1041,13 +1041,13 @@ reference = "aliyun"
 
 [[package]]
 name = "botocore-stubs"
-version = "1.29.157"
+version = "1.29.158"
 description = "Type annotations and code completion for botocore"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "botocore_stubs-1.29.157-py3-none-any.whl", hash = "sha256:5f050fca7bd4f0f3bf5c05c311f1954088bc0dfec1c70b0afe59333327f54bd0"},
-    {file = "botocore_stubs-1.29.157.tar.gz", hash = "sha256:e20ac6ae9d6fcab87881b963265ecc932ce20b742210093a1b6f9bd4450970a4"},
+    {file = "botocore_stubs-1.29.158-py3-none-any.whl", hash = "sha256:a251934578cfb894fb0c47dc03b57a03752bb91c9fd9ffb2a973dcf4973c6bde"},
+    {file = "botocore_stubs-1.29.158.tar.gz", hash = "sha256:abadda219cde636f78a78a96c94f02ca2d8e21af779cdf57ebdf79901a8c2672"},
 ]
 
 [package.dependencies]
@@ -1367,6 +1367,22 @@ python-versions = ">=3.5"
 files = [
     {file = "decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"},
     {file = "decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330"},
+]
+
+[package.source]
+type = "legacy"
+url = "https://mirrors.aliyun.com/pypi/simple"
+reference = "aliyun"
+
+[[package]]
+name = "defusedxml"
+version = "0.7.1"
+description = "XML bomb protection for Python stdlib modules"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+files = [
+    {file = "defusedxml-0.7.1-py2.py3-none-any.whl", hash = "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"},
+    {file = "defusedxml-0.7.1.tar.gz", hash = "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69"},
 ]
 
 [package.source]
@@ -2497,13 +2513,13 @@ reference = "aliyun"
 
 [[package]]
 name = "mypy-boto3-dynamodb"
-version = "1.26.152"
-description = "Type annotations for boto3.DynamoDB 1.26.152 service generated with mypy-boto3-builder 7.14.5"
+version = "1.26.158"
+description = "Type annotations for boto3.DynamoDB 1.26.158 service generated with mypy-boto3-builder 7.14.5"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "mypy-boto3-dynamodb-1.26.152.tar.gz", hash = "sha256:b31dfd107fed0a030bc32b4cf2b498aa38560920e33d6ec00c6e283d14d2421e"},
-    {file = "mypy_boto3_dynamodb-1.26.152-py3-none-any.whl", hash = "sha256:4c5d95f1e10088cbaf3715c4127dde84e011368d26a92994d514f5a2f981813f"},
+    {file = "mypy-boto3-dynamodb-1.26.158.tar.gz", hash = "sha256:cbce7bd1c12a3d7ac15cb33690d14e9ca0591b57936bf3ad47562105280e1356"},
+    {file = "mypy_boto3_dynamodb-1.26.158-py3-none-any.whl", hash = "sha256:9cecd3d3328f0ab7382a4517b0bc533d565c251d39467c086ae41700588c950e"},
 ]
 
 [package.dependencies]
@@ -2798,13 +2814,13 @@ reference = "aliyun"
 
 [[package]]
 name = "platformdirs"
-version = "3.6.0"
+version = "3.7.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-3.6.0-py3-none-any.whl", hash = "sha256:ffa199e3fbab8365778c4a10e1fbf1b9cd50707de826eb304b50e57ec0cc8d38"},
-    {file = "platformdirs-3.6.0.tar.gz", hash = "sha256:57e28820ca8094678b807ff529196506d7a21e17156cb1cddb3e74cebce54640"},
+    {file = "platformdirs-3.7.0-py3-none-any.whl", hash = "sha256:cfd065ba43133ff103ab3bd10aecb095c2a0035fcd1f07217c9376900d94ba07"},
+    {file = "platformdirs-3.7.0.tar.gz", hash = "sha256:87fbf6473e87c078d536980ba970a472422e94f17b752cfad17024c18876d481"},
 ]
 
 [package.extras]
@@ -2818,13 +2834,13 @@ reference = "aliyun"
 
 [[package]]
 name = "pluggy"
-version = "1.0.0"
+version = "1.2.0"
 description = "plugin and hook calling mechanisms for python"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
-    {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
+    {file = "pluggy-1.2.0-py3-none-any.whl", hash = "sha256:c2fd55a7d7a3863cba1a013e4e2414658b1d07b6bc57b3919e0c63c9abb99849"},
+    {file = "pluggy-1.2.0.tar.gz", hash = "sha256:d12f0c4b579b15f5e054301bb226ee85eeeba08ffec228092f8defbaa3a4c4b3"},
 ]
 
 [package.extras]
@@ -3278,13 +3294,13 @@ reference = "aliyun"
 
 [[package]]
 name = "pyright"
-version = "1.1.314"
+version = "1.1.315"
 description = "Command line wrapper for pyright"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pyright-1.1.314-py3-none-any.whl", hash = "sha256:5008a2e04b71e35c5f1b78b16adae9d012601197442ae6c798e9bb3456d1eecb"},
-    {file = "pyright-1.1.314.tar.gz", hash = "sha256:bd104c206fe40eaf5f836efa9027f07cc0efcbc452e6d22dfae36759c5fd28b3"},
+    {file = "pyright-1.1.315-py3-none-any.whl", hash = "sha256:262744daa7455f6056f6d6609b6278258e2fd7bd100d8937203516ee71d0eb93"},
+    {file = "pyright-1.1.315.tar.gz", hash = "sha256:f124400a1a72ccc5fd04836e7e48ed235e8f7929bcc42b270a571fb34df17979"},
 ]
 
 [package.dependencies]
@@ -3414,6 +3430,25 @@ pytest = ">=2.3"
 dev = ["black", "pre-commit"]
 pyqt5 = ["qt5reactor[pyqt5] (>=0.6.2)"]
 pyside2 = ["qt5reactor[pyside2] (>=0.6.3)"]
+
+[package.source]
+type = "legacy"
+url = "https://mirrors.aliyun.com/pypi/simple"
+reference = "aliyun"
+
+[[package]]
+name = "python-barcode"
+version = "0.14.0"
+description = "Create standard barcodes with Python. No external modules needed. (optional Pillow support included)."
+optional = false
+python-versions = "*"
+files = [
+    {file = "python-barcode-0.14.0.tar.gz", hash = "sha256:241b34aa5c5cb6a9889882f9409b0182903a2c5d19b4218be3609cdbbd5ffdf9"},
+    {file = "python_barcode-0.14.0-py3-none-any.whl", hash = "sha256:eefbb2583ba7bdb09baba6f8663129883109c61df7e23c9b9b473087521c926f"},
+]
+
+[package.extras]
+images = ["pillow"]
 
 [package.source]
 type = "legacy"
@@ -3584,18 +3619,19 @@ url = "https://mirrors.aliyun.com/pypi/simple"
 reference = "aliyun"
 
 [[package]]
-name = "reportbro-fpdf"
-version = "1.7.11"
-description = "Simple PDF generation for Python"
+name = "reportbro-fpdf2"
+version = "2.7.2"
+description = "Simple & fast PDF generation for Python"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "reportbro_fpdf-1.7.11-py2.py3-none-any.whl", hash = "sha256:5a8c9f38758b195b82404152aae2753889a0a82be74d8f45d305a311c554864f"},
+    {file = "reportbro_fpdf2-2.7.2-py2.py3-none-any.whl", hash = "sha256:d2f755a8fc637f8a0fed85e18392500f6c23a92bedfd96bbc15e90f10946a259"},
 ]
 
 [package.dependencies]
-Pillow = ">=4"
-six = "*"
+defusedxml = "*"
+fonttools = ">=4.34.0"
+Pillow = ">=6.2.2,<9.2.dev0 || >=9.3.dev0"
 
 [package.source]
 type = "legacy"
@@ -3604,22 +3640,23 @@ reference = "aliyun"
 
 [[package]]
 name = "reportbro-lib"
-version = "2.1.1"
+version = "3.2.1"
 description = "Generate PDF and Excel reports from visually designed templates"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+python-versions = ">=3.7,<4.0"
 files = [
-    {file = "reportbro-lib-2.1.1.tar.gz", hash = "sha256:0dbfb3219d2105348b95ba79ebdc79294af314ed5b83d9fff02e2fea69a08ab6"},
-    {file = "reportbro_lib-2.1.1-py2.py3-none-any.whl", hash = "sha256:0a59bad51b508a41d1674d9dcd66b74bf171517565561fed5c0a6ea6f95d3d2a"},
+    {file = "reportbro_lib-3.2.1-py3-none-any.whl", hash = "sha256:c6860677018b0b4df3590193b0680d4f56d9798d680cd69693e8e006a54979a2"},
+    {file = "reportbro_lib-3.2.1.tar.gz", hash = "sha256:3d49027f6dfecf22b8fa948962bc5d0da5de4dbbd3ce26ce51da8f81590855e2"},
 ]
 
 [package.dependencies]
-Babel = ">=2.9.1,<3.0.0"
-Pillow = ">=4.0"
-qrcode = ">=7.3.1,<8.0.0"
-reportbro-fpdf = ">=1.7.11,<2.0.0"
+Babel = ">=2.10.2,<3.0.0"
+Pillow = ">=9.2.0,<10.0.0"
+python-barcode = ">=0.14.0,<0.15.0"
+qrcode = ">=7.4.2,<8.0.0"
+reportbro-fpdf2 = ">=2.7.2,<3.0.0"
 reportbro-simpleeval = ">=0.9.11,<0.10.0"
-XlsxWriter = ">=3.0.2,<4.0.0"
+XlsxWriter = ">=3.0.3,<4.0.0"
 
 [package.source]
 type = "legacy"
@@ -5583,4 +5620,4 @@ reference = "aliyun"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.1,<4.0"
-content-hash = "f02acd7d510506841483dfa48e8d622ca4ce1c817bbfc03b2549b4ba5104b0e4"
+content-hash = "bf5595b148e987f72b8ccd3bbfbb06b71ce5e95d0e813d0dfd48b804d1313b34"

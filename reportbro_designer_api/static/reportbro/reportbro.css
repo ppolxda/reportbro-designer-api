@@ -1,4 +1,3 @@
-@import url(https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;800&display=swap);
 :root {
     --rbro-primary-text-color: #191919;
     --rbro-active-button-color: #191919;
@@ -20,6 +19,7 @@
     --rbro-popup-item-text-color: #FFFFFF;
     --rbro-popup-description-color: #8C8C8C;
     --rbro-popup-content-border-color: #191919;
+    --rbro-error-text-color: #ff3b30;
 }
 
 .rbroClassicTheme {
@@ -66,8 +66,6 @@
     top: auto;
     left: auto;
     -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
 }
 
@@ -98,12 +96,10 @@
     color: var(--rbro-primary-text-color);
     width: 100%;
     box-sizing: border-box;
-    height: 28px;
     border-radius: 4px;
     border: 1px solid rgba(0,0,0,0.1);
     background-color: #F1F3F4;
     transition: all 0.2s linear;
-    padding: 0 4px;
     margin: 0;
     outline: none;
     font-size: 12px;
@@ -111,11 +107,24 @@
     box-shadow: none;
 }
 
+.rbroContainer input, .rbroContainer select {
+    height: 28px;
+    padding: 0 4px;
+}
+
+.rbroContainer textarea {
+    resize: none !important;
+    min-height: 34px;
+    height: inherit;
+    padding: 5px;
+}
+
 .rbroContainer select {
     transition: none;
 }
 
-.rbroContainer input[type=checkbox] {
+.rbroContainer input[type=checkbox],
+.rbroPopupWindow input[type=checkbox] {
     height: auto;
     width: auto;
     margin: 0;
@@ -124,18 +133,14 @@
     opacity: inherit;
 }
 
-.rbroContainer input[type=file] {
+.rbroContainer input[type=file],
+.rbroPopupWindow input[type=file] {
     color: transparent;
     padding: 0;
     border: none;
     background-color: transparent;
     height: auto;
-}
-
-.rbroContainer textarea {
-    resize: none !important;
-    min-height: 34px;
-    padding: 5px;
+    max-width: 120px;
 }
 
 .rbroContainer input:focus, .rbroContainer select:focus, .rbroContainer textarea:focus {
@@ -349,6 +354,7 @@
     padding: 10px 5px;
     cursor: pointer;
     text-transform: uppercase;
+    gap: 5px;
 }
 
 .rbroMenuItem.rbroUnusedParameter {
@@ -389,7 +395,7 @@
 
 .rbroMenuItem.rbroMenuItemActive.rbroError {
     background-color: #FFFFFF;
-    color: #FF3B30;
+    color: var(--rbro-error-text-color);
 }
 
 .rbroMenuItem.rbroMenuItemDragOver {
@@ -516,7 +522,6 @@ ul ul .rbroMenuItemText {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
 }
 
 .rbroSplit .rbroErrorMessage {
@@ -540,6 +545,10 @@ ul ul .rbroMenuItemText {
     width: 70px;
 }
 
+.rbroInfo {
+    font-size: 85%;
+}
+
 .rbroInfo a, .rbroInfo a:hover, .rbroInfo a:visited, .rbroInfo a:focus, .rbroInfo a:active {
     color: var(--rbro-detailPanel-button-color);
     text-decoration: none;
@@ -549,16 +558,21 @@ ul ul .rbroMenuItemText {
     color: var(--rbro-detailPanel-button-hover-color);
 }
 
+.rbroImageFile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+}
+
+
 /* Rich Text Editor */
 
 .rbroFormRow.rbroRichTextEditor {
     flex-direction: column;
+    -webkit-user-select: auto;
+    user-select: auto;
 }
-
-.rbroRichTextEditor .rbroButton {
-    margin: 5px 2px 0 0;
-}
-
 
 /* For styling font selection only */
 .rbroSelectFont select:first-child {
@@ -649,7 +663,7 @@ ul ul .rbroMenuItemText {
     background-color: rgba(204,204,204,0.2);
 }
 
-.rbroElementDragOver > .rbroDocumentBandDescription {
+.rbroElementDragOver > .rbroDocumentBandDescription, .rbroHighlightBandDescription > .rbroDocumentBandDescription {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -657,6 +671,13 @@ ul ul .rbroMenuItemText {
     font-size: 32px;
     font-weight: 600;
     color: rgba(0,72,100,0.4);
+}
+
+.rbroHighlightBandDescription > .rbroDocumentBandDescription {
+    justify-content: flex-end;
+    align-items: flex-start;
+    font-size: 18px;
+    background-color: rgba(204,204,204,0.2);
 }
 
 /* Document Panel - Tabs to switch between layout and preview */
@@ -708,13 +729,13 @@ ul ul .rbroMenuItemText {
     padding-right: 35px;
 }
 
-.rbroXlsxDownlaodButton {
+.rbroXlsxDownloadButton {
     font-size: 26px;
     top: 0;
     right: 30px;
 }
 
-.rbroTabButton .rbroIcon-cancel:hover, .rbroXlsxDownlaodButton:hover {
+.rbroTabButton .rbroIcon-cancel:hover, .rbroXlsxDownloadButton:hover {
     color: var(--rbro-detailPanel-button-color);
 }
 
@@ -970,11 +991,9 @@ ul ul .rbroMenuItemText {
     display: inline-block;
     box-sizing: border-box;
     border: inherit;
-    margin: 0;
 }
 
 .rbroMenuItem .rbroButton {
-    margin-left: 5px;
     min-width: 18px;
 }
 
@@ -1035,7 +1054,7 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
 }
 
 .rbroDeleteButton:hover, .rbroMenuItem.rbroError .rbroDeleteButton:hover {
-    color: var(--rbro-mainPanel-button-hover-color);
+    color: var(--rbro-error-text-color);
 }
 
 .rbroRoundButton {
@@ -1068,7 +1087,7 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
 }
 
 .rbroErrorMessage {
-    color: #FF3B30;
+    color: var(--rbro-error-text-color);
 }
 
 .rbroErrorMessage:empty {
@@ -1205,6 +1224,20 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     margin: 10px auto 0;
 }
 
+.rbroPopupWindowContent table table {
+    /* nested table */
+    margin: 0 0 0 auto;
+}
+
+.rbroPopupWindowContent table .rbroFullWidthButton {
+     /* align button with nested table */
+    margin: 0 0 10px 50px;
+}
+
+.rbroPopupWindowContent table th span {
+    margin: 0 5px;
+}
+
 .rbroPopupWindowContent table th:not(:first-child) {
     background-color: var(--rbro-popup-item-bg-color);
     color: var(--rbro-popup-item-text-color);
@@ -1212,6 +1245,10 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     padding: 5px 2px;
     font-weight: 600;
     text-align: center;
+}
+
+.rbroPopupWindowContent table table th:not(:first-child) {
+    background-color: var(--rbro-popup-item-alt-bg-color);
 }
 
 .rbroPopupWindowContent table th:first-child {
@@ -1226,7 +1263,8 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     border: 1px solid #8C8C8C;
 }
 
-.rbroPopupWindowContent table input, .rbroPopupWindowContent table input:focus {
+.rbroPopupWindowContent table input[type=text], .rbroPopupWindowContent table input[type=text]:focus,
+.rbroPopupWindowContent table td .expandableCell {
     color: var(--rbro-primary-text-color);
     width: 100%;
     box-sizing: border-box;
@@ -1237,19 +1275,28 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     border-radius: 0;
     font-size: 12px;
     font-weight: 400;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
     opacity: 1;
     background-color: transparent;
     box-shadow: none;
+    outline: none;
 }
 
-.rbroPopupWindowContent table td.rbroHasFocus {
-    border: 1px solid #009EE2;
-}
-
-.rbroPopupWindowContent table td.rbroHasFocus input {
+.rbroPopupWindowContent table td.rbroHasFocus input[type=text] {
     border: 2px solid #009EE2;
     padding: 2px;
+}
+
+.rbroPopupWindowContent table td .expandableCell {
+    cursor: pointer;
+    transition: all 0.2s linear;
+}
+
+.rbroPopupWindowContent table td .expandableCell:hover,
+.rbroPopupWindowContent table td .expandableCell.rbroExpandedCell {
+    background-color: #F1F3F4;
 }
 
 .rbroPopupWindowContent table .rbroButton {
@@ -1291,6 +1338,17 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     font-size: 12px;
     border-radius: 4px 4px 0 0 ;
     box-shadow: none;
+}
+
+.rbroPopupWindow .rbroImageFileContainer {
+    display: flex;
+    font-size: 12px;
+    gap: 5px;
+    padding: 0 4px;
+}
+
+.rbroPopupWindowContent .rbroTestDataCheckbox {
+    text-align: center;
 }
 
 /* ReportBro color picker */
@@ -1377,13 +1435,54 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     padding: 2px;
     text-align: center;
 }
+
+/* open-sans-300 - latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 300;
+  src: local(''),
+       url(src/fonts/open-sans-v34-latin-300.woff2?c93abfae8b4c45ec0929) format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url(src/fonts/open-sans-v34-latin-300.woff?fbaa05ad22cd4594290a) format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+
+/* open-sans-regular - latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''),
+       url(src/fonts/open-sans-v34-latin-regular.woff2?a1535f451fb7bb98f526) format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url(src/fonts/open-sans-v34-latin-regular.woff?7958f4e4a2bb8025ef86) format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+
+/* open-sans-600 - latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 600;
+  src: local(''),
+       url(src/fonts/open-sans-v34-latin-600.woff2?7ef3bbc98d285227e83a) format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url(src/fonts/open-sans-v34-latin-600.woff?f031bf84d9797276192c) format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+
+/* open-sans-800 - latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 800;
+  src: local(''),
+       url(src/fonts/open-sans-v34-latin-800.woff2?185f6b038323b60834d2) format('woff2'), /* Chrome 26+, Opera 23+, Firefox 39+ */
+       url(src/fonts/open-sans-v34-latin-800.woff?85529d398dc9862d74fe) format('woff'); /* Chrome 6+, Firefox 3.6+, IE 9+, Safari 5.1+ */
+}
+
 @font-face {
   font-family: 'reportbro';
   src:
-    url(src/iconfonts/reportbro.woff2?449bd2bc4b226e564077) format('woff2'),
-    url(src/iconfonts/reportbro.ttf?e0c4d6e9868ab31674a7) format('truetype'),
-    url(src/iconfonts/reportbro.woff?4679086a3cee0a68759e) format('woff'),
-    url(src/iconfonts/reportbro.svg?999b4dd40797fe6009c9#reportbro) format('svg');
+    url(src/iconfonts/reportbro.woff2?b720cd4cd389283e0ecc) format('woff2'),
+    url(src/iconfonts/reportbro.ttf?5d66733e875019c6808f) format('truetype'),
+    url(src/iconfonts/reportbro.woff?68c4b771add63bbe652a) format('woff'),
+    url(src/iconfonts/reportbro.svg?92dcc88e36cc53ce4d02#reportbro) format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -1404,6 +1503,9 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
   -moz-osx-font-smoothing: grayscale;
 }
 
+.rbroIcon-info:before {
+  content: "\e939";
+}
 .rbroIcon-check:before {
   content: "\e938";
 }
@@ -2071,7 +2173,6 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     align-items: center;
     padding: 3px 5px;
     background-color: #E4E7EA;
-    margin: 0 2px 0 0;
     border: 2px solid transparent;
     border-radius: 4px;
     height: 30px;
@@ -2269,7 +2370,6 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     font-size: 12px;
     width: 60px;
     background-color: #E4E7EA;
-    margin: 2px 2px 0 10px;
     border-radius: 4px;
     height: 28px;
     cursor: pointer;
@@ -2277,7 +2377,6 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
 
 .ql-snow .ql-picker.ql-font {
     width: 145px;
-    margin: 2px 2px 0 0;
 }
 
 .ql-toolbar.ql-snow {
@@ -2287,10 +2386,13 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     width: 100%;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     flex-wrap: wrap;
+    gap: 5px;
 }
 .ql-toolbar.ql-snow .ql-formats {
     display: flex;
+    gap: 2px;
 }
 
 .ql-toolbar.ql-snow .ql-picker-label {
