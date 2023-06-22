@@ -33,6 +33,10 @@ class StorageBase(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def generate_presigned_url(self, s3_key: str) -> str:
+        """Generate presigned url file, This api only use for test."""
+
+    @abstractmethod
     async def put_file(self, s3_key: str, file_buffer: bytes):
         """Put file."""
         raise NotImplementedError

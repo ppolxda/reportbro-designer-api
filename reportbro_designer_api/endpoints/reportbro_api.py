@@ -177,7 +177,9 @@ async def create_templates(
     client: BackendBase = Depends(get_meth_cli),
 ):
     """Templates Manage page."""
-    rrr = await client.put_template(req.template_name, req.template_type, {})
+    rrr = await client.put_template(
+        req.template_name, req.template_type, {}, tid=req.tid
+    )
     return TemplateDataResponse(
         code=HTTP_200_OK,
         error="ok",
@@ -292,7 +294,7 @@ async def clone_templates(
 
 
 @router.delete(
-    "/templates/{tid}/delete",
+    "/templates/{tid}",
     tags=TAGS,
     name="Delete Templates",
     response_model=ErrorResponse,
@@ -363,13 +365,13 @@ def gen_file_from_report(
             filename = "report-" + str(now) + ".xlsx"
             return filename, report_file
     except ReportBroError as ex:
-        # in case an error occurs during report report generation
+        # in case an error occurs during report report generate
         # a ReportBroError exception is thrown
         # to stop processing. We return this error within a list so the error can be
         # processed by ReportBro Designer.
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail=f"failed to generation report[{ex}]",
+            detail=f"failed to generate report[{ex}]",
         ) from ex
     finally:
         end = timer()
@@ -451,7 +453,7 @@ async def review_templates(
     name="Generate file from multiple template(PDF Only)",
     response_model=TemplateDownLoadResponse,
 )
-async def generation_templates_multi_gen(
+async def generate_templates_multi_gen(
     request: Request,
     req: RequestMultiGenerateTemplate,
     disabled_fill: bool = Query(
@@ -534,12 +536,12 @@ async def generation_templates_multi_gen(
     tags=GEN_TAGS,
     name="Get generate file from multiple template",
 )
-async def generation_templates_multi(
+async def generate_templates_multi(
     key: str = Query(title="File Key", min_length=16),
     storage: StorageMange = Depends(get_storage_mange),
 ):
     """Review Templates."""
-    r = read_file_in_s3("pdf", key, storage)
+    r = await read_file_in_s3("pdf", key, storage)
     return r
 
 
@@ -554,7 +556,7 @@ async def generation_templates_multi(
     name="Generate file from template",
     response_model=TemplateDownLoadResponse,
 )
-async def generation_templates_gen(
+async def generate_templates_gen(
     request: Request,
     req: RequestGenerateTemplate,
     tid: str = Path(title="Template id"),
@@ -598,7 +600,7 @@ async def generation_templates_gen(
     tags=GEN_TAGS,
     name="Get generate file",
 )
-async def generation_templates(
+async def generate_templates(
     output_format: str = Query(
         "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
     ),
@@ -606,5 +608,5 @@ async def generation_templates(
     storage: StorageMange = Depends(get_storage_mange),
 ):
     """Review Templates."""
-    r = read_file_in_s3(output_format, key, storage)
+    r = await read_file_in_s3(output_format, key, storage)
     return r

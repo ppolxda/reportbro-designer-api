@@ -27,6 +27,19 @@ class S3Storage(S3ClientBase, StorageBase):
         await self.clear_bucket()
 
     @hook_create_bucket_when_not_exist()
+    async def generate_presigned_url(self, s3_key: str) -> str:
+        """Put file."""
+        s3_obj = self.s3parse(s3_key)
+
+        async with self.s3cli() as client:
+            download_url = await client.generate_presigned_url(
+                ClientMethod="get_object",
+                Params={"Bucket": self.bucket_name, "Key": s3_obj.path},
+                ExpiresIn=3600,
+            )
+            return download_url
+
+    @hook_create_bucket_when_not_exist()
     async def put_file(self, s3_key: str, file_buffer: bytes):
         """Put file."""
         s3_obj = self.s3parse(s3_key)
