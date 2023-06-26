@@ -433,7 +433,7 @@ async def read_file_in_s3(output_format, key, client: StorageMange):
 
 
 @router.put(
-    "/templates/review",
+    "/templates/review/generate",
     tags=GEN_TAGS,
     name="Generate preview file from template",
 )
@@ -454,7 +454,7 @@ async def review_templates_gen(
 
 
 @router.get(
-    "/templates/review",
+    "/templates/review/generate",
     tags=GEN_TAGS,
     name="Get generate preview file",
 )
