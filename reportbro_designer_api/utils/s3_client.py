@@ -8,13 +8,11 @@
 """
 
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 from typing import Optional
 
 import aioboto3
 from aiobotocore.config import AioConfig
 from botocore.client import ClientError
-from types_aiobotocore_s3.client import S3Client
 
 from ..errors import S3ClientError
 
@@ -71,7 +69,7 @@ class S3ClientBase(object):
         self.bucket_name = bucket
 
     @asynccontextmanager
-    async def s3cli(self) -> AsyncGenerator[S3Client, None]:
+    async def s3cli(self):
         """创建客户端."""
         session = aioboto3.Session()
         async with session.client(

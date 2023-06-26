@@ -13,11 +13,6 @@ from io import BytesIO
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Union
-
-from types_aiobotocore_s3.type_defs import HeadObjectOutputTypeDef
-from types_aiobotocore_s3.type_defs import ObjectTypeDef
-from types_aiobotocore_s3.type_defs import ObjectVersionTypeDef
 
 from reportbro_designer_api.errors import BackendError
 from reportbro_designer_api.utils.s3_client import S3ClientBase
@@ -122,11 +117,7 @@ class S3BackendClient(S3ClientBase):
             return res
 
     @classmethod
-    def __conv_dict(
-        cls,
-        obj: Union[ObjectTypeDef, ObjectVersionTypeDef],
-        head: HeadObjectOutputTypeDef,
-    ):
+    def __conv_dict(cls, obj, head):
         """Get Body."""
         assert "/" in obj.get("Key", "")
         return sa.TemplateInfo(
