@@ -70,7 +70,7 @@ def create_s3_client(db_url) -> S3Backend:
         aws_secret_access_key=url_.password or "minioadmin",
         endpoint_url=endpoint_url,
         region_name=region_name or "us-west-1",
-        bucket=url_.path or "reportbro",
+        bucket=url_.path[1:] or "reportbro",
         default_template=defdata,
     )
 
@@ -185,7 +185,7 @@ def create_local_storage(db_url):
 
 def create_s3_storage(db_url: str):
     """Create S3 storage."""
-    s3cli = create_s3_storage(db_url)
+    s3cli = create_s3_client(db_url)
     return S3Storage(s3cli)
 
 
