@@ -17,8 +17,7 @@ from alembic.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from sqlalchemy import text
 
-from ..clients import create_db_sessionmaker
-from ..clients import create_db_sync_engine
+from ..clients import get_db_sessionmaker
 from ..settings import settings
 from .models import Base
 
@@ -91,7 +90,7 @@ def checkdb(timeout):
     """
     config = _get_alembic_config()
     script_ = ScriptDirectory.from_config(config)
-    engine = create_db_sync_engine()
+    engine = get_db_sessionmaker().kw["bind"]
     with engine.connect() as connection:
         context = MigrationContext.configure(connection)
         ticker = 0
@@ -121,7 +120,7 @@ def upgrade_db():
     #     for err in errs:
     #         click.echo("Automatic migration is not available\n%s", err)
     #     return
-    sessionmaker = create_db_sessionmaker()
+    sessionmaker = get_db_sessionmaker()
     with sessionmaker() as session:
         with create_global_lock(session=session, pg_lock_id=2, lock_name="upgrade"):
             command.upgrade(config, "heads")
@@ -138,7 +137,7 @@ def downgrade_db():
     #     for err in errs:
     #         click.echo("Automatic migration is not available\n%s", err)
     #     return
-    sessionmaker = create_db_sessionmaker()
+    sessionmaker = get_db_sessionmaker()
     with sessionmaker() as session:
         with create_global_lock(session=session, pg_lock_id=2, lock_name="upgrade"):
             command.downgrade(config, "-1")
@@ -156,7 +155,7 @@ def drop_reportbro_models(connection):
 
 def drop_db():
     """Drops all reportbro models."""
-    sessionmaker = create_db_sessionmaker()
+    sessionmaker = get_db_sessionmaker()
     # engine = sessionmaker.kw["bind"]
     with sessionmaker() as session:
         with create_global_lock(session=session, pg_lock_id=3, lock_name="reset"):
@@ -213,7 +212,7 @@ def revision(m, autogenerate):
     click.echo("Revision verstion")
     click.echo(f"Process url: {settings.db_url_sync_mark}")
     config = _get_alembic_config()
-    sessionmaker = create_db_sessionmaker()
+    sessionmaker = get_db_sessionmaker()
     with sessionmaker() as session:
         with create_global_lock(session=session, pg_lock_id=1, lock_name="revision"):
             command.revision(config, m, autogenerate)

@@ -7,7 +7,7 @@
 @desc: web main
 """
 import traceback
-
+from contextlib import asynccontextmanager
 from botocore.exceptions import ClientError
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
@@ -24,33 +24,13 @@ from .settings import settings
 from .utils.logger import LOGGER
 from .utils.model import ErrorResponse
 from .version import __VERSION__
+from .clients import get_storage_mange
 
 
 def get_app() -> FastAPI:
     """Fastapi app."""
-    rapp = FastAPI(
-        title="Reportbro designer server",
-        description="Reportbro designer server",
-        version=__VERSION__,
-        openapi_prefix=settings.ROOT_PATH,
-        openapi_url="/openapi.json" if settings.SHOW_DOC else None,
-        docs_url="/docs" if settings.SHOW_DOC else None,
-        redoc_url="/redoc" if settings.SHOW_DOC else None,
-        root_path=settings.ROOT_PATH,
-        root_path_in_servers=settings.ROOT_PATH_IN_SERVERS,
-        debug=settings.IS_DEBUG,
-        servers=[
-            {
-                "url": settings.ROOT_PATH if settings.ROOT_PATH else "/",
-                "description": "localhost",
-            },
-        ],
-    )
-    rapp.mount("/static", StaticFiles(directory=settings.STATIC_PATH), name="static")
-    rapp.include_router(router)
 
-    @rapp.on_event("startup")
-    async def startup():
+    def print_var():
         # await database.connect()
         LOGGER.info("--------------------------------------")
         for i in rapp.router.routes:
@@ -62,9 +42,33 @@ def get_app() -> FastAPI:
         # LOGGER.info("--------------------------------------")
         LOGGER.info("\n".join(settings.format_print()))
 
-    @rapp.on_event("shutdown")
-    def shutdown():
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        print_var()
+        yield
         LOGGER.info("service shutdown")
+
+    rapp = FastAPI(
+        title="Reportbro designer server",
+        description="Reportbro designer server",
+        version=__VERSION__,
+        openapi_prefix=settings.ROOT_PATH,
+        openapi_url="/openapi.json" if settings.SHOW_DOC else None,
+        docs_url="/docs" if settings.SHOW_DOC else None,
+        redoc_url="/redoc" if settings.SHOW_DOC else None,
+        root_path=settings.ROOT_PATH,
+        root_path_in_servers=settings.ROOT_PATH_IN_SERVERS,
+        debug=settings.IS_DEBUG,
+        lifespan=lifespan,
+        servers=[
+            {
+                "url": settings.ROOT_PATH if settings.ROOT_PATH else "/",
+                "description": "localhost",
+            },
+        ],
+    )
+    rapp.mount("/static", StaticFiles(directory=settings.STATIC_PATH), name="static")
+    rapp.include_router(router)
 
     @rapp.exception_handler(ReportbroError)
     async def report_exception_handler(request: Request, exc: ReportbroError):

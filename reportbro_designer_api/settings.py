@@ -10,7 +10,7 @@ import os
 from functools import lru_cache
 
 import pkg_resources
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from sqlalchemy.engine.url import make_url
 
 TEMPLATES_PATH = pkg_resources.resource_filename("reportbro_designer_api", "templates")
@@ -35,30 +35,15 @@ class Settings(BaseSettings):
     ROOT_PATH: str = ""
     ROOT_PATH_IN_SERVERS: bool = True
 
-    MINIO_ACCESS_KEY: str = "minioadmin"
-    MINIO_SECRET_KEY: str = "minioadmin"
-    MINIO_ENDPOINT_URL: str = "http://127.0.0.1:9000"
-    MINIO_BUCKET: str = "reportbro"
-    # MINIO_SITE_NAME: str = "reportbro-s3"
-    MINIO_SITE_REGION: str = "us-west-1"
-
     DOWNLOAD_TIMEOUT: int = 180
 
+    # s3://minioadmin:minioadmin@127.0.0.1:9000
+    # ss3://minioadmin:minioadmin@127.0.0.1:9000
     # sqlite+aiosqlite:///./reportbro.db
     # mysql+aiomysql://root:root@localhost/reportbro
     # postgresql+asyncpg://postgres:postgres@localhost:5432/reportbro
-    DB_URL: str = "sqlite+aiosqlite:///./reportbro.db"
-    DB_POOL_SIZE: int = 5
-    DB_POOL_TIMEOUT: int = 30
-    DB_POOL_RECYCLE: int = 1800
-    DB_MAX_OVERFLOW: int = 10
-    DB_ISOLATION_LEVEL: str = "READ UNCOMMITTED"
-    PRINT_SQL: bool = False
-
-    BACKEND_MODE: str = "s3"
-    STORAGE_MODE: str = "s3"
-    STORAGE_LOCAL_TTL: int = 30 * 60
-    STORAGE_LOCAL_PATH: str = ""
+    DB_URL: str = "sqlite+aiosqlite:///./data/reportbro.db?re=aa"
+    STORAGE_URL: str = "file://./data?storage_local_ttl=10"
 
     @property
     def db_url_mark(self):
@@ -83,9 +68,6 @@ class Settings(BaseSettings):
         # await database.connect()
         log = ["--------------------------------------"]
         for key, val in self.dict().items():
-            if key in ["MINIO_SECRET_KEY", "MINIO_ACCESS_KEY"]:
-                continue
-
             if (
                 key.endswith("URI")
                 or key.endswith("URL")

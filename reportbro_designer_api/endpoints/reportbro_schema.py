@@ -51,7 +51,7 @@ class RequestGenerateTemplate(BaseModel):
     """RequestGenerateTemplate."""
 
     output_format: str = Field(
-        "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
+        "pdf", title="Output Format(pdf|xlsx)", pattern=r"^(pdf|xlsx)$"
     )
     data: dict = Field(title="Source Data")
 
@@ -74,7 +74,7 @@ class RequestMultiGenerateTemplate(BaseModel):
     """RequestMultiGenerateTemplate."""
 
     output_format: str = Field(
-        "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
+        "pdf", title="Output Format(pdf|xlsx)", pattern=r"^(pdf|xlsx)$"
     )
     templates: List[
         Union[RequestGenerateDataTemplate, RequestGenerateUrlTemplate]

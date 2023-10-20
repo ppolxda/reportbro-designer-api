@@ -10,6 +10,7 @@ import base64
 import os
 from typing import Optional
 from typing import Tuple
+from fastapi import BackgroundTasks
 
 from ..errors import StorageError
 from .storages.base import StorageBase
@@ -43,12 +44,16 @@ class StorageMange(object):
         return "s3://" + "/".join([self.REVIEW_PREFIX, project, filename])
 
     async def put_file(
-        self, filename: str, file_buffer: bytes, project: Optional[str] = None
+        self,
+        filename: str,
+        file_buffer: bytes,
+        background_tasks: BackgroundTasks,
+        project: Optional[str] = None,
     ) -> DowmloadKey:
         """Put file."""
         project = project if project else self.project_name
         s3_key = self.make_s3_key(filename, project)
-        await self.storage.put_file(s3_key, file_buffer)
+        await self.storage.put_file(s3_key, file_buffer, background_tasks)
         return "key:" + base64.b64encode(s3_key.encode("utf8")).decode("utf8")
 
     async def get_file(self, download_key: DowmloadKey) -> Tuple[FileName, bytes]:

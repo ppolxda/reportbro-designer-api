@@ -22,6 +22,7 @@ import filetype
 import PyPDF2
 import requests
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Path
@@ -91,8 +92,8 @@ async def main_index_page(
             TemplateListData(
                 **{
                     **i.__dict__,
-                    "template_designer_page": request.url_for(
-                        "Templates Designer page", tid=i.tid
+                    "template_designer_page": str(
+                        request.url_for("Templates Designer page", tid=i.tid)
                     ),
                 }
             )
@@ -121,8 +122,8 @@ async def get_versions(
             TemplateListData(
                 **{
                     **i.__dict__,
-                    "template_designer_page": request.url_for(
-                        "Templates Designer page", tid=i.tid
+                    "template_designer_page": str(
+                        request.url_for("Templates Designer page", tid=i.tid)
                     ),
                 }
             )
@@ -157,8 +158,8 @@ async def get_templates_data(
             **{
                 **template.dict(),
                 "report": template.report,
-                "template_designer_page": request.url_for(
-                    "Templates Designer page", tid=template.tid
+                "template_designer_page": str(
+                    request.url_for("Templates Designer page", tid=template.tid)
                 ),
             }
         ),
@@ -187,8 +188,8 @@ async def create_templates(
             template_type=req.template_type,
             tid=rrr.tid,
             version_id=rrr.version_id,
-            template_designer_page=request.url_for(
-                "Templates Designer page", tid=rrr.tid
+            template_designer_page=str(
+                request.url_for("Templates Designer page", tid=rrr.tid)
             ),
         ),
     )
@@ -217,8 +218,8 @@ async def create_templates_tid(
             template_type=req.template_type,
             tid=rrr.tid,
             version_id=rrr.version_id,
-            template_designer_page=request.url_for(
-                "Templates Designer page", tid=rrr.tid
+            template_designer_page=str(
+                request.url_for("Templates Designer page", tid=rrr.tid)
             ),
         ),
     )
@@ -262,8 +263,8 @@ async def save_templates(
             template_type=obj.template_type,
             tid=tid,
             version_id=rrr.version_id,
-            template_designer_page=request.url_for(
-                "Templates Designer page", tid=rrr.tid
+            template_designer_page=str(
+                request.url_for("Templates Designer page", tid=rrr.tid)
             ),
         ),
     )
@@ -314,8 +315,8 @@ async def clone_templates(
             template_type=obj_src.template_type,
             tid=tid,
             version_id=rrr.version_id,
-            template_designer_page=request.url_for(
-                "Templates Designer page", tid=rrr.tid
+            template_designer_page=str(
+                request.url_for("Templates Designer page", tid=rrr.tid)
             ),
         ),
     )
@@ -439,6 +440,7 @@ async def read_file_in_s3(output_format, key, client: StorageMange):
 )
 async def review_templates_gen(
     req: RequestReviewTemplate,
+    background_tasks: BackgroundTasks,
     disabled_fill: bool = Query(
         default=False, title="Disable fill empty fields for input data"
     ),
@@ -449,7 +451,7 @@ async def review_templates_gen(
         req.output_format, req.report, req.data, req.is_test_data, disabled_fill
     )
     assert report_file
-    key = await storage.put_file(filename, report_file)
+    key = await storage.put_file(filename, report_file, background_tasks)
     return PlainTextResponse(key)
 
 
@@ -484,6 +486,7 @@ async def review_templates(
 async def generate_templates_multi_gen(
     request: Request,
     req: RequestMultiGenerateTemplate,
+    background_tasks: BackgroundTasks,
     disabled_fill: bool = Query(
         default=False, title="Disable fill empty fields for input data"
     ),
@@ -542,13 +545,15 @@ async def generate_templates_multi_gen(
     rrr.seek(0)
 
     assert filename
-    download_key = await storage.put_file(filename, rrr.read())
+    download_key = await storage.put_file(filename, rrr.read(), background_tasks)
     return TemplateDownLoadResponse(
         code=HTTP_200_OK,
         error="ok",
         data=TemplateDownLoadData(
             download_key=download_key,
-            download_url=request.url_for("Get generate file from multiple template")
+            download_url=str(
+                request.url_for("Get generate file from multiple template")
+            )
             + "?"
             + urlencode(
                 {
@@ -587,6 +592,7 @@ async def generate_templates_multi(
 async def generate_templates_gen(
     request: Request,
     req: RequestGenerateTemplate,
+    background_tasks: BackgroundTasks,
     tid: str = Path(title="Template id"),
     version_id: Optional[str] = Query(
         None, title="Template version id", alias="versionId"
@@ -606,13 +612,13 @@ async def generate_templates_gen(
         req.output_format, templage.report, req.data, False, disabled_fill
     )
     assert report_file
-    download_key = await storage.put_file(filename, report_file)
+    download_key = await storage.put_file(filename, report_file, background_tasks)
     return TemplateDownLoadResponse(
         code=HTTP_200_OK,
         error="ok",
         data=TemplateDownLoadData(
             download_key=download_key,
-            download_url=request.url_for("Get generate file", tid=tid)
+            download_url=str(request.url_for("Get generate file", tid=tid))
             + "?"
             + urlencode(
                 {

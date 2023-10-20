@@ -15,11 +15,12 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm.session import sessionmaker
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
 
 from .backend import BackendBase
 from .backend import DBBackend
 from .backend import S3Backend
-from .errors import ClientParamsError
 from .settings import settings
 from .storage import LocalStorage
 from .storage import S3Storage
@@ -29,10 +30,9 @@ from .utils.report import ReportFontsLoader
 FONTS_LOADER = ReportFontsLoader(settings.FONTS_PATH)
 
 
-@lru_cache()
 def get_s3_client() -> S3Backend:
     """Get s3 client."""
-    return create_s3_client()
+    return create_s3_client(settings.DB_URL)
 
 
 def load_default_template():
@@ -48,91 +48,116 @@ def load_default_template():
     return defdata
 
 
-def create_s3_client() -> S3Backend:
+def create_s3_client(db_url) -> S3Backend:
     """Create s3 client."""
     defdata = load_default_template()
+    url_ = urlparse(db_url)
+
+    scheme = "http"
+    if url_.scheme == "ss3":
+        scheme = "https"
+
+    if url_.port:
+        endpoint_url = f"{scheme}://{url_.hostname}:{url_.port}"
+    else:
+        endpoint_url = f"{scheme}://{url_.hostname}"
+
+    query_params = parse_qs(url_.query)
+    region_name = query_params.get("region_name", ["us-west-1"])[0]
+
     return S3Backend(
-        aws_access_key_id=settings.MINIO_ACCESS_KEY,
-        aws_secret_access_key=settings.MINIO_SECRET_KEY,
-        endpoint_url=settings.MINIO_ENDPOINT_URL,
-        region_name=settings.MINIO_SITE_REGION,
-        bucket=settings.MINIO_BUCKET,
+        aws_access_key_id=url_.username or "minioadmin",
+        aws_secret_access_key=url_.password or "minioadmin",
+        endpoint_url=endpoint_url,
+        region_name=region_name or "us-west-1",
+        bucket=url_.path or "reportbro",
         default_template=defdata,
     )
 
 
-@lru_cache()
-def get_db_client():
-    """Get Datebase client."""
-    return create_db_client()
-
-
-def __create_db_engine(is_async=True):
+def __create_db_engine(db_url: str, is_async=True):
     """Create Datebase engin."""
     if is_async:
         create_engine_ = create_async_engine
-        db_url = settings.DB_URL
     else:
         create_engine_ = create_engine
-        db_url = settings.db_url_sync
+
+    db_url_ = urlparse(db_url)
+    query_params = parse_qs(db_url_.query)
+    db_pool_size = int(query_params.get("db_pool_size", [5])[0])
+    db_pool_timeout = int(query_params.get("db_pool_timeout", [30])[0])
+    db_pool_recycle = int(query_params.get("db_pool_recycle", [1800])[0])
+    db_max_overflow = int(query_params.get("db_max_overflow", [10])[0])
+    db_isolation_level = query_params.get("db_isolation_level", ["READ UNCOMMITTED"])[0]
+    print_sql = bool(query_params.get("print_sql", [False])[0])
+    db_url = db_url.split("?")[0]
 
     if settings.DB_URL.startswith("sqlite"):
         engine = create_engine_(
             db_url,
-            echo=settings.PRINT_SQL,
-            hide_parameters=not settings.PRINT_SQL,
-            isolation_level=settings.DB_ISOLATION_LEVEL,
+            echo=print_sql,
+            hide_parameters=print_sql,
+            isolation_level=db_isolation_level,
             future=True,
         )
     else:
         engine = create_engine_(
             db_url,
             pool_pre_ping=True,
-            hide_parameters=not settings.PRINT_SQL,
-            echo=settings.PRINT_SQL,
-            isolation_level=settings.DB_ISOLATION_LEVEL,
-            pool_size=settings.DB_POOL_SIZE,
-            pool_timeout=settings.DB_POOL_TIMEOUT,
-            pool_recycle=settings.DB_POOL_RECYCLE,
-            max_overflow=settings.DB_MAX_OVERFLOW,
+            hide_parameters=not print_sql,
+            echo=print_sql,
+            isolation_level=db_isolation_level,
+            pool_size=db_pool_size,
+            pool_timeout=db_pool_timeout,
+            pool_recycle=db_pool_recycle,
+            max_overflow=db_max_overflow,
             future=True,
         )
     return engine
 
 
-def create_db_sync_engine() -> Engine:
+def create_db_sync_engine(db_url: str) -> Engine:
     """Create Datebase Async engine."""
-    engine = __create_db_engine(is_async=False)
+    engine = __create_db_engine(db_url, is_async=False)
     assert isinstance(engine, Engine)
     return engine
 
 
-def create_db_async_engine() -> AsyncEngine:
+def create_db_async_engine(db_url: str) -> AsyncEngine:
     """Create Datebase Async engine."""
-    engine = __create_db_engine(is_async=True)
+    engine = __create_db_engine(db_url, is_async=True)
     assert isinstance(engine, AsyncEngine)
     return engine
 
 
-def create_db_sessionmaker() -> sessionmaker:
+def create_db_sessionmaker(db_url: str) -> sessionmaker:
     """Create Datebase client."""
-    engine = create_db_sync_engine()
+    engine = create_db_sync_engine(db_url)
     return sessionmaker(
         autocommit=False, autoflush=False, expire_on_commit=False, bind=engine
     )
 
 
-def create_db_asyncsessionmaker() -> async_sessionmaker:
+@lru_cache
+def get_db_sessionmaker():
+    """Get Datebase client."""
+    engine = create_db_sync_engine(settings.db_url_sync)
+    return sessionmaker(
+        autocommit=False, autoflush=False, expire_on_commit=False, bind=engine
+    )
+
+
+def create_db_asyncsessionmaker(db_url: str) -> async_sessionmaker:
     """Create Datebase client."""
-    engine = create_db_async_engine()
+    engine = create_db_async_engine(db_url)
     return async_sessionmaker(
         autocommit=False, autoflush=False, expire_on_commit=False, bind=engine
     )
 
 
-def create_db_client() -> DBBackend:
+def create_db_client(db_url: str) -> DBBackend:
     """Create Datebase client."""
-    asyncsessionmaker = create_db_asyncsessionmaker()
+    asyncsessionmaker = create_db_asyncsessionmaker(db_url)
     defdata = load_default_template()
     return DBBackend(
         asyncsessionmaker,
@@ -143,40 +168,36 @@ def create_db_client() -> DBBackend:
 @lru_cache()
 def get_meth_cli() -> BackendBase:
     """获取连接."""
-    if settings.BACKEND_MODE == "s3":
-        return get_s3_client()
-    elif settings.BACKEND_MODE == "db":
-        return get_db_client()
+    if settings.DB_URL.startswith("s3://") or settings.DB_URL.startswith("ss3://"):
+        return create_s3_client(settings.DB_URL)
     else:
-        raise ClientParamsError(f"Get Client Meth Error [{settings.BACKEND_MODE}]")
+        return create_db_client(settings.DB_URL)
 
 
-def create_local_storage():
+def create_local_storage(db_url):
     """Create local storage."""
-    return LocalStorage(
-        settings.STORAGE_LOCAL_PATH,
-        settings.STORAGE_LOCAL_TTL,
-    )
+    assert settings.STORAGE_URL.startswith("file://")
+    url_ = urlparse(db_url)
+    query_params = parse_qs(url_.query)
+    storage_local_ttl = int(query_params.get("storage_local_ttl", [5])[0])
+    return LocalStorage(url_.path or "./data", storage_local_ttl)
 
 
-def create_s3_storage():
+def create_s3_storage(db_url: str):
     """Create S3 storage."""
-    return S3Storage(
-        settings.MINIO_ACCESS_KEY,
-        settings.MINIO_SECRET_KEY,
-        endpoint_url=settings.MINIO_ENDPOINT_URL,
-        region_name=settings.MINIO_SITE_REGION,
-        bucket=settings.MINIO_BUCKET,
-    )
+    s3cli = create_s3_storage(db_url)
+    return S3Storage(s3cli)
 
 
 @lru_cache()
 def get_storage_cli():
     """Get Storage client."""
-    if settings.STORAGE_MODE == "local":
-        return create_local_storage()
-    elif settings.STORAGE_MODE == "s3":
-        return create_s3_storage()
+    if settings.STORAGE_URL.startswith("file://"):
+        return create_local_storage(settings.STORAGE_URL)
+    elif settings.STORAGE_URL.startswith("s3://") or settings.STORAGE_URL.startswith(
+        "ss3://"
+    ):
+        return create_s3_storage(settings.STORAGE_URL)
     else:
         raise TypeError("STORAGE_MODE invaild")
 

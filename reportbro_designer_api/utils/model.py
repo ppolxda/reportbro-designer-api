@@ -14,9 +14,10 @@ from typing import Type
 from typing import TypeVar
 
 import pydantic
-from humps.main import camelize
 from pydantic import Field
 from pydantic import generics
+from pydantic import ConfigDict
+from pydantic.alias_generators import to_camel
 
 DataT = TypeVar("DataT")
 
@@ -24,25 +25,23 @@ DataT = TypeVar("DataT")
 class BaseModel(pydantic.BaseModel):
     """BaseModel."""
 
-    class Config:
-        """Config."""
+    model_config = ConfigDict(
+        from_attributes=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+        str_strip_whitespace=True,
+    )
 
-        orm_mode = True
-        alias_generator = camelize
-        allow_population_by_field_name = True
-        # use_enum_values = True
 
-
-class GenericModel(generics.GenericModel):
+class GenericModel(pydantic.BaseModel):
     """GenericModel."""
 
-    class Config:
-        """Config."""
-
-        orm_mode = True
-        alias_generator = camelize
-        allow_population_by_field_name = True
-        # use_enum_values = True
+    model_config = ConfigDict(
+        from_attributes=True,
+        alias_generator=to_camel,
+        populate_by_name=True,
+        str_strip_whitespace=True,
+    )
 
 
 class ErrorResponse(BaseModel):

@@ -10,6 +10,7 @@ from abc import ABC
 from abc import abstractmethod
 from typing import Optional
 from urllib.parse import urlparse
+from fastapi import BackgroundTasks
 
 from ...errors import StorageError
 
@@ -37,7 +38,9 @@ class StorageBase(ABC):
         """Generate presigned url file, This api only use for test."""
 
     @abstractmethod
-    async def put_file(self, s3_key: str, file_buffer: bytes):
+    async def put_file(
+        self, s3_key: str, file_buffer: bytes, background_tasks: BackgroundTasks
+    ):
         """Put file."""
         raise NotImplementedError
 
