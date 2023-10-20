@@ -8,8 +8,8 @@
 """
 from io import BytesIO
 from typing import Optional
-from fastapi import BackgroundTasks
 
+from fastapi import BackgroundTasks
 from filetype import guess
 
 from reportbro_designer_api.utils.s3_client import S3ClientBase

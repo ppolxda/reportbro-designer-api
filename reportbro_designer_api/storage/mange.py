@@ -10,6 +10,7 @@ import base64
 import os
 from typing import Optional
 from typing import Tuple
+
 from fastapi import BackgroundTasks
 
 from ..errors import StorageError

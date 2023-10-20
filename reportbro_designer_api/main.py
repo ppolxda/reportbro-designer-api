@@ -21,7 +21,6 @@ from fastapi.responses import JSONResponse
 from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.datastructures import URL
-from starlette.routing import Router
 from starlette.status import HTTP_404_NOT_FOUND
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE

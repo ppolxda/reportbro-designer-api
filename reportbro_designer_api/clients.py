@@ -8,6 +8,8 @@
 """
 import json
 from functools import lru_cache
+from urllib.parse import parse_qs
+from urllib.parse import urlparse
 
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine import create_engine
@@ -15,8 +17,6 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm.session import sessionmaker
-from urllib.parse import urlparse
-from urllib.parse import parse_qs
 
 from .backend import BackendBase
 from .backend import DBBackend

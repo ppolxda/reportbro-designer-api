@@ -14,9 +14,8 @@ from typing import Type
 from typing import TypeVar
 
 import pydantic
-from pydantic import Field
-from pydantic import generics
 from pydantic import ConfigDict
+from pydantic import Field
 from pydantic.alias_generators import to_camel
 
 DataT = TypeVar("DataT")

@@ -10,6 +10,7 @@ from abc import ABC
 from abc import abstractmethod
 from typing import Optional
 from urllib.parse import urlparse
+
 from fastapi import BackgroundTasks
 
 from ...errors import StorageError

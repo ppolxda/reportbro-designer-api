@@ -20,8 +20,6 @@ from typing import Union
 
 from sqlalchemy import delete
 from sqlalchemy import select
-from sqlalchemy import literal_column
-from sqlalchemy import String
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import load_only

@@ -37,8 +37,8 @@ class Settings(BaseSettings):
 
     DOWNLOAD_TIMEOUT: int = 180
 
-    # s3://minioadmin:minioadmin@127.0.0.1:9000
-    # ss3://minioadmin:minioadmin@127.0.0.1:9000
+    # s3://minioadmin:minioadmin@127.0.0.1:9000/reportbro
+    # ss3://minioadmin:minioadmin@127.0.0.1:9000/reportbro
     # sqlite+aiosqlite:///./reportbro.db
     # mysql+aiomysql://root:root@localhost/reportbro
     # postgresql+asyncpg://postgres:postgres@localhost:5432/reportbro
