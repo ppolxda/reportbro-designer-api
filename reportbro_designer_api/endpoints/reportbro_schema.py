@@ -92,7 +92,7 @@ class RequestCloneTemplate(BaseModel):
     """RequestCloneTemplate."""
 
     from_tid: str = Field(title="Clone from template id")
-    from_version_id: Optional[str] = Field(None, title="Clone from Template version id")
+    from_version_id: str = Field("", title="Clone from Template version id")
 
 
 class TemplateListResponse(ListResponse[TemplateListData]):

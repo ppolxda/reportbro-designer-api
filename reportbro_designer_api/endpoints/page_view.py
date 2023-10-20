@@ -38,12 +38,6 @@ translation = NullTranslations()
 templates.env.install_gettext_translations(translation)  # pylint: disable=no-member
 
 
-@router.get("/", tags=TAGS, name="Main page")
-async def main_index_page():
-    """Web main page."""
-    return RedirectResponse("/templates")
-
-
 @router.get("/templates", tags=TAGS, name="Templates Manage page")
 async def templates_index_page():
     """Templates Manage page."""

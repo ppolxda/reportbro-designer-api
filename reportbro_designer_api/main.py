@@ -6,8 +6,10 @@
 
 @desc: web main
 """
+import os
 import traceback
 from contextlib import asynccontextmanager
+
 from botocore.exceptions import ClientError
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
@@ -24,7 +26,17 @@ from .settings import settings
 from .utils.logger import LOGGER
 from .utils.model import ErrorResponse
 from .version import __VERSION__
-from .clients import get_storage_mange
+
+
+class UiStaticFiles(StaticFiles):
+    """UiStaticFiles."""
+
+    async def get_response(self, path: str, scope):
+        """get_response."""
+        response = await super().get_response(path, scope)
+        if response.status_code == 404:
+            response = await super().get_response(".", scope)
+        return response
 
 
 def get_app() -> FastAPI:
@@ -66,6 +78,10 @@ def get_app() -> FastAPI:
                 "description": "localhost",
             },
         ],
+    )
+    rapp.mount(
+        "/ui/",
+        UiStaticFiles(directory=os.path.join(settings.STATIC_PATH, "ui"), html=True),
     )
     rapp.mount("/static", StaticFiles(directory=settings.STATIC_PATH), name="static")
     rapp.include_router(router)
