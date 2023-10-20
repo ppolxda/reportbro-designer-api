@@ -7,6 +7,7 @@
 @desc: web main
 """
 import os
+import re
 import traceback
 from contextlib import asynccontextmanager
 
@@ -14,8 +15,13 @@ from botocore.exceptions import ClientError
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
+from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
+from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.datastructures import URL
+from starlette.routing import Router
 from starlette.status import HTTP_404_NOT_FOUND
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
@@ -31,11 +37,36 @@ from .version import __VERSION__
 class UiStaticFiles(StaticFiles):
     """UiStaticFiles."""
 
+    FILE_PATH_REGIX = re.compile(r'(href|src)="\/ui\/(.*?)"')
+    FILE_JS_PATH_REGIX = re.compile(r"index-(.*?).js$")
+    FILE_JS_API_REGIX = re.compile(r'="/api",')
+
     async def get_response(self, path: str, scope):
         """get_response."""
         response = await super().get_response(path, scope)
-        if response.status_code == 404:
-            response = await super().get_response(".", scope)
+        # if response.status_code == 404:
+        #     response = await super().get_response(".", scope)
+        # request.url_for(
+        if isinstance(response, FileResponse) and isinstance(response.path, str):
+            if len(self.FILE_JS_PATH_REGIX.findall(response.path)) > 0:
+                with open(response.path, "r", encoding="utf8") as fs:
+                    content = fs.read()
+
+                content = content.replace(
+                    'path:"/ui",', f'path:"{scope["root_path"]}",'
+                )
+                content = self.FILE_JS_API_REGIX.sub(
+                    f'="{scope["app_root_path"]}",', content
+                )
+                return PlainTextResponse(content=content, media_type="text/javascript")
+
+            if response.path.endswith("index.html"):
+                with open(response.path, "r", encoding="utf8") as fs:
+                    content = fs.read()
+
+                url_ = URL(scope=scope)
+                content = self.FILE_PATH_REGIX.sub(f'\\1="{url_}\\2"', content)
+                return HTMLResponse(content=content)
         return response
 
 
@@ -82,6 +113,7 @@ def get_app() -> FastAPI:
     rapp.mount(
         "/ui/",
         UiStaticFiles(directory=os.path.join(settings.STATIC_PATH, "ui"), html=True),
+        name="Ui Page",
     )
     rapp.mount("/static", StaticFiles(directory=settings.STATIC_PATH), name="static")
     rapp.include_router(router)

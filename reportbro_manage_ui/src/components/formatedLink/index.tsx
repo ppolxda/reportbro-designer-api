@@ -1,13 +1,14 @@
-import { jumpUrl } from "@/config";
+// import { jumpUrl } from "@/config";
 import { FC } from "react";
 import { LinkProps, Link } from "react-router-dom";
 
 export function formatLink(url: string) {
   if (typeof url === "string") {
-    return url.replace(
-      /^(https?:\/\/[^/]+)/,
-      `${(jumpUrl ?? "").replace(/\/$/, "")}`
-    );
+    return url;
+    // return url.replace(
+    //   /^(https?:\/\/[^/]+)/,
+    //   `${(jumpUrl ?? "").replace(/\/$/, "")}`
+    // );
   }
   return "";
 }
