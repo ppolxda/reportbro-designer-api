@@ -26,13 +26,9 @@ from .storage import LocalStorage
 from .storage import S3Storage
 from .storage import StorageMange
 from .utils.report import ReportFontsLoader
+from .utils.s3_client import S3Client
 
 FONTS_LOADER = ReportFontsLoader(settings.FONTS_PATH)
-
-
-def get_s3_client() -> S3Backend:
-    """Get s3 client."""
-    return create_s3_client(settings.DB_URL)
 
 
 def load_default_template():
@@ -48,9 +44,8 @@ def load_default_template():
     return defdata
 
 
-def create_s3_client(db_url) -> S3Backend:
+def create_s3_client(db_url) -> S3Client:
     """Create s3 client."""
-    defdata = load_default_template()
     url_ = urlparse(db_url)
 
     scheme = "http"
@@ -65,13 +60,12 @@ def create_s3_client(db_url) -> S3Backend:
     query_params = parse_qs(url_.query)
     region_name = query_params.get("region_name", ["us-west-1"])[0]
 
-    return S3Backend(
+    return S3Client(
         aws_access_key_id=url_.username or "minioadmin",
         aws_secret_access_key=url_.password or "minioadmin",
         endpoint_url=endpoint_url,
         region_name=region_name or "us-west-1",
         bucket=url_.path[1:] or "reportbro",
-        default_template=defdata,
     )
 
 
@@ -155,7 +149,7 @@ def create_db_asyncsessionmaker(db_url: str) -> async_sessionmaker:
     )
 
 
-def create_db_client(db_url: str) -> DBBackend:
+def create_db_backend(db_url: str) -> DBBackend:
     """Create Datebase client."""
     asyncsessionmaker = create_db_asyncsessionmaker(db_url)
     defdata = load_default_template()
@@ -165,13 +159,23 @@ def create_db_client(db_url: str) -> DBBackend:
     )
 
 
+def create_s3_backend(db_url: str) -> S3Backend:
+    """Get s3 client."""
+    defdata = load_default_template()
+    s3cli = create_s3_client(db_url)
+    return S3Backend(
+        s3cli,
+        default_template=defdata,
+    )
+
+
 @lru_cache()
 def get_meth_cli() -> BackendBase:
     """获取连接."""
     if settings.DB_URL.startswith("s3://") or settings.DB_URL.startswith("ss3://"):
-        return create_s3_client(settings.DB_URL)
+        return create_s3_backend(settings.DB_URL)
     else:
-        return create_db_client(settings.DB_URL)
+        return create_s3_backend(settings.DB_URL)
 
 
 def create_local_storage(db_url):

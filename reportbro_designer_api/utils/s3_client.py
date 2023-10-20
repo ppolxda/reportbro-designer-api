@@ -22,7 +22,12 @@ def hook_create_bucket_when_not_exist():
 
     def wrapper(func):
         async def wrapper_call(self, *args, **kwargs):
-            await self.create_bucket_when_not_exist()
+            if hasattr(self, "create_bucket_when_not_exist"):
+                await self.create_bucket_when_not_exist()
+
+            if hasattr(self, "_s3cli"):
+                await self._s3cli.create_bucket_when_not_exist()
+
             return await func(self, *args, **kwargs)
 
         return wrapper_call
@@ -46,7 +51,7 @@ def hook_object_not_exist():
     return wrapper
 
 
-class S3ClientBase(object):
+class S3Client(object):
     """S3ClientBase."""
 
     TEMPLATES_PREFIX = "templates"

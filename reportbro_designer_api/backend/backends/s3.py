@@ -9,13 +9,14 @@
 
 import base64
 import json
+from contextlib import asynccontextmanager
 from io import BytesIO
 from typing import Dict
 from typing import List
 from typing import Optional
 
 from reportbro_designer_api.errors import BackendError
-from reportbro_designer_api.utils.s3_client import S3ClientBase
+from reportbro_designer_api.utils.s3_client import S3Client
 from reportbro_designer_api.utils.s3_client import hook_create_bucket_when_not_exist
 from reportbro_designer_api.utils.s3_client import hook_object_not_exist
 
@@ -23,30 +24,35 @@ from .. import schemas as sa
 from .base import BackendBase
 
 
-class S3BackendClient(S3ClientBase):
+class S3BackendClient:
     """S3Backend."""
 
     def __init__(
         self,
-        aws_access_key_id: str,
-        aws_secret_access_key: str,
-        endpoint_url: Optional[str] = None,
-        region_name: str = "us-east-1",
-        bucket: str = "reportbro",
+        s3cli: S3Client,
         project: str = "default",
         default_template: Optional[dict] = None,
         query_max_limit: int = 1000,
     ):
         """Init s3."""
-        super().__init__(
-            aws_access_key_id, aws_secret_access_key, endpoint_url, region_name, bucket
-        )
+        self._s3cli = s3cli
         if default_template is None:
             default_template = {}
 
         self.project_name = project
         self.default_template = default_template
         self.query_max_limit = query_max_limit
+
+    @property
+    def bucket_name(self):
+        """Get bucket_name."""
+        return self._s3cli.bucket_name
+
+    @asynccontextmanager
+    async def s3cli(self):
+        """Get s3cli."""
+        async with self._s3cli.s3cli() as client:
+            yield client
 
     @staticmethod
     def encode_matedata(data: Dict[str, str]):
@@ -76,9 +82,9 @@ class S3BackendClient(S3ClientBase):
             project = self.project_name
 
         if tid:
-            return "/".join([self.TEMPLATES_PREFIX, project, tid])
+            return "/".join([self._s3cli.TEMPLATES_PREFIX, project, tid])
         else:
-            return "/".join([self.TEMPLATES_PREFIX, project])
+            return "/".join([self._s3cli.TEMPLATES_PREFIX, project])
 
     @hook_create_bucket_when_not_exist()
     async def _get_templates_list(
@@ -269,7 +275,7 @@ class S3Backend(S3BackendClient, BackendBase):
 
     async def clean_all(self):
         """Clean database, This api only use for test."""
-        await self.clear_bucket()
+        await self._s3cli.clear_bucket()
 
     async def is_template_exist(
         self,
@@ -279,7 +285,7 @@ class S3Backend(S3BackendClient, BackendBase):
     ) -> bool:
         """Is templates Exist."""
         object_id = self.make_template_key(tid, project)
-        r = await self._is_object_exist(object_id, version_id)
+        r = await self._s3cli._is_object_exist(object_id, version_id)
         return r
 
     async def get_templates_list(
