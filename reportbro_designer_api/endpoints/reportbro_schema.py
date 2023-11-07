@@ -7,7 +7,6 @@
 @desc: ReportBro Api
 """
 from typing import List
-from typing import Optional
 from typing import Union
 
 from pydantic import Field
@@ -60,7 +59,7 @@ class RequestGenerateDataTemplate(BaseModel):
     """RequestGenerateTemplate."""
 
     tid: str = Field(title="Template id")
-    version_id: Optional[str] = Field(title="Template version id")
+    version_id: Union[str, None] = Field(default=None, title="Template version id")
     data: dict = Field(default_factory=dict, title="Source Data")
 
 
