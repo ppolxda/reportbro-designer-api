@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     PDF_TITLE: str = "report"
     PDF_DEFAULT_FONT: str = "helvetica"
     PDF_LOCALE: str = "en_us"
+    PAGE_LIMIT: int = 1000
 
     ROOT_PATH: str = ""
     ROOT_PATH_IN_SERVERS: bool = True

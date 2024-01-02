@@ -84,7 +84,7 @@ async def main_index_page(
     client: BackendBase = Depends(get_meth_cli),
 ):
     """Get templates List."""
-    list_ = await client.get_templates_list()
+    list_ = await client.get_templates_list(limit=settings.PAGE_LIMIT)
     return TemplateListResponse(
         code=HTTP_200_OK,
         error="ok",
