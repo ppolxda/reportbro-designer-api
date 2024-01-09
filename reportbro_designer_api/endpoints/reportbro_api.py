@@ -48,6 +48,7 @@ from ..utils.report import fill_default
 from .reportbro_schema import RequestCloneTemplate
 from .reportbro_schema import RequestCreateTemplate
 from .reportbro_schema import RequestGenerateDataTemplate
+from .reportbro_schema import RequestGenerateReviewTemplate
 from .reportbro_schema import RequestGenerateTemplate
 from .reportbro_schema import RequestGenerateUrlTemplate
 from .reportbro_schema import RequestMultiGenerateTemplate
@@ -529,7 +530,7 @@ async def generate_templates_multi_gen(
                 False,
                 disabled_fill,
             )
-        elif isinstance(i, RequestReviewTemplate):
+        elif isinstance(i, RequestGenerateReviewTemplate):
             filename, report_file = gen_file_from_report(
                 req.output_format,
                 i.report,
