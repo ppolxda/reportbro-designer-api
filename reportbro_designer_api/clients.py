@@ -175,7 +175,7 @@ def get_meth_cli() -> BackendBase:
     if settings.DB_URL.startswith("s3://") or settings.DB_URL.startswith("ss3://"):
         return create_s3_backend(settings.DB_URL)
     else:
-        return create_s3_backend(settings.DB_URL)
+        return create_db_backend(settings.DB_URL)
 
 
 def create_local_storage(db_url):

@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     # mysql+aiomysql://root:root@localhost/reportbro
     # postgresql+asyncpg://postgres:postgres@localhost:5432/reportbro
     DB_URL: str = "sqlite+aiosqlite:///./data/reportbro.db?re=aa"
-    STORAGE_URL: str = "file://./data?storage_local_ttl=10"
+    STORAGE_URL: str = "file://./data?storage_local_ttl=180"
 
     @property
     def db_url_mark(self):

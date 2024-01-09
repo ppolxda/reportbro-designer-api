@@ -69,6 +69,13 @@ class RequestGenerateUrlTemplate(BaseModel):
     pdf_url: str = Field(title="Download url for pdf")
 
 
+class RequestReviewTemplate(RequestGenerateTemplate):
+    """RequestReviewTemplate."""
+
+    report: dict = Field(title="Template Data")
+    is_test_data: bool = Field(title="Is test data")
+
+
 class RequestMultiGenerateTemplate(BaseModel):
     """RequestMultiGenerateTemplate."""
 
@@ -76,15 +83,8 @@ class RequestMultiGenerateTemplate(BaseModel):
         "pdf", title="Output Format(pdf|xlsx)", pattern=r"^(pdf|xlsx)$"
     )
     templates: List[
-        Union[RequestGenerateDataTemplate, RequestGenerateUrlTemplate]
+        Union[RequestGenerateDataTemplate, RequestGenerateUrlTemplate, RequestReviewTemplate]
     ] = Field(default_factory=list, title="Input templates list")
-
-
-class RequestReviewTemplate(RequestGenerateTemplate):
-    """RequestReviewTemplate."""
-
-    report: dict = Field(title="Template Data")
-    is_test_data: bool = Field(title="Is test data")
 
 
 class RequestCloneTemplate(BaseModel):

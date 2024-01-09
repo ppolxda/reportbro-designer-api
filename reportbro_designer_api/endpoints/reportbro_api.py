@@ -529,6 +529,14 @@ async def generate_templates_multi_gen(
                 False,
                 disabled_fill,
             )
+        elif isinstance(i, RequestReviewTemplate):
+            filename, report_file = gen_file_from_report(
+                req.output_format,
+                i.report,
+                i.data,
+                False,
+                disabled_fill,
+            )
         else:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
