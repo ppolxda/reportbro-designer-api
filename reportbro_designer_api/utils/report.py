@@ -65,7 +65,7 @@ def fill_default(report_definition, data):
         elif _type == "boolean":
             _data[_name] = False
         elif _type == "date":
-            _data[_name] = "1900-01-01"
+            _data[_name] = None
         elif _type in ["simple_array", "array"]:
             _data[_name] = []
         elif _type == "image":
