@@ -58,18 +58,20 @@ def fill_default(report_definition, data):
                         _fill_default(ppp, data)
             return
 
+        nullable = _parame.get("nullable", False)
+
         if _type == "number":
-            _data[_name] = 0.00
+            _data[_name] = 0.00 if not nullable else None
         elif _type == "string":
-            _data[_name] = ""
+            _data[_name] = "" if not nullable else None
         elif _type == "boolean":
-            _data[_name] = False
+            _data[_name] = False if not nullable else None
         elif _type == "date":
-            _data[_name] = None
+            _data[_name] = None if not nullable else None
         elif _type in ["simple_array", "array"]:
             _data[_name] = []
         elif _type == "image":
-            _data[_name] = ""
+            _data[_name] = "" if not nullable else None
         elif _type == "map":
             _data[_name] = {}
             for ppp in _parame["children"]:
