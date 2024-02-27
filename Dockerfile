@@ -22,4 +22,5 @@ RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /
 USER appuser
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["gunicorn", "--bind", "0.0.0.0:7651", "-k", "uvicorn.workers.UvicornWorker", "reportbro_designer_api.main:app"]
+COPY logging.conf /app/logging.conf
+CMD ["gunicorn", "--bind", "0.0.0.0:7651", "--timeout=600", "--log-config=logging.conf", "-k", "uvicorn.workers.UvicornWorker", "reportbro_designer_api.main:app"]
