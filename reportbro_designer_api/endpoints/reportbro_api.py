@@ -6,11 +6,14 @@
 
 @desc: ReportBro Api
 """
+import asyncio
 import json
 import os
 import traceback
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from enum import Enum
+from functools import partial
 from io import BytesIO
 from timeit import default_timer as timer
 from typing import List
@@ -18,9 +21,10 @@ from typing import Optional
 from typing import Union
 from urllib.parse import urlencode
 
+import aiohttp
 import filetype
 import PyPDF2
-import requests
+from aiohttp import ClientTimeout
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
@@ -45,11 +49,13 @@ from ..utils.logger import LOGGER
 from ..utils.model import ErrorResponse
 from ..utils.report import ReportPdf
 from ..utils.report import fill_default
+from .reportbro_schema import PdfData
 from .reportbro_schema import RequestCloneTemplate
 from .reportbro_schema import RequestCreateTemplate
 from .reportbro_schema import RequestGenerateDataTemplate
 from .reportbro_schema import RequestGenerateReviewTemplate
 from .reportbro_schema import RequestGenerateTemplate
+from .reportbro_schema import RequestGenerateTUrlTemplate
 from .reportbro_schema import RequestGenerateUrlTemplate
 from .reportbro_schema import RequestMultiGenerateTemplate
 from .reportbro_schema import RequestReviewTemplate
@@ -478,6 +484,75 @@ async def review_templates(
 # ----------------------------------------------
 
 
+def generate_pdf_mutil(
+    output_format: str,
+    disabled_fill: bool,
+    req: Union[
+        PdfData,
+        RequestGenerateReviewTemplate,
+    ],
+):
+    """Review Templates Generate."""
+    try:
+        if isinstance(req, PdfData):
+            return req
+
+        elif isinstance(req, RequestGenerateReviewTemplate):
+            filename, report_file = gen_file_from_report(
+                output_format,
+                req.report,
+                req.data,
+                False,
+                disabled_fill,
+            )
+            return PdfData(filename=filename, report_file=report_file)
+
+        else:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="templates is invaild",
+            )
+    except HTTPException as ex:
+        return ex.detail
+
+    except Exception as ex:
+        # return Exception
+        return str(ex)
+
+
+async def download_pdf(pdf_url):
+    """Download PDF."""
+    if pdf_url.startswith("file://"):
+        with open(pdf_url[7:], "rb") as fss:
+            data = fss.read()
+        filename, report_file = os.path.basename(pdf_url), data
+    else:
+        timeout = ClientTimeout(total=settings.DOWNLOAD_TIMEOUT)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(pdf_url) as resp:
+                assert resp.status == 200
+                data = await resp.read()
+                filename, report_file = os.path.basename(pdf_url), data
+
+    if not is_pdf(report_file):
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="pdf_url is not pdf file",
+        )
+
+    return PdfData(filename=filename, report_file=report_file)
+
+
+async def download_template(pdf_url):
+    """Download Template."""
+    timeout = ClientTimeout(total=settings.DOWNLOAD_TIMEOUT)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.get(pdf_url) as resp:
+            assert resp.status == 200
+            data = await resp.json()
+            return data
+
+
 @router.put(
     "/templates/multi/generate",
     tags=GEN_TAGS,
@@ -501,59 +576,73 @@ async def generate_templates_multi_gen(
             detail="templates is empty",
         )
 
-    filename = ""
-    merge_file = PyPDF2.PdfFileMerger()
+    templates = []
+
+    # check request templates
     for i in req.templates:
         if isinstance(i, RequestGenerateUrlTemplate):
-            if i.pdf_url.startswith("file://"):
-                with open(i.pdf_url[7:], "rb") as fss:
-                    data = fss.read()
-                filename, report_file = os.path.basename(i.pdf_url), data
-            else:
-                data = requests.get(i.pdf_url, timeout=settings.DOWNLOAD_TIMEOUT)
-                filename, report_file = os.path.basename(i.pdf_url), data.content
+            report_data = await download_pdf(i.pdf_url)
+            templates.append(report_data)
 
-            if not is_pdf(report_file):
-                raise HTTPException(
-                    status_code=HTTP_400_BAD_REQUEST,
-                    detail="pdf_url is not pdf file",
-                )
+        elif isinstance(i, RequestGenerateTUrlTemplate):
+            templage = await download_template(i.report_url)
+            if not templage:
+                raise TemplageNotFoundError("template not found")
+
+            templates.append(
+                RequestGenerateReviewTemplate(report=templage, data=i.data)
+            )
+
         elif isinstance(i, RequestGenerateDataTemplate):
             templage = await client.get_template(i.tid, i.version_id)
             if not templage:
                 raise TemplageNotFoundError("template not found")
 
-            filename, report_file = gen_file_from_report(
-                req.output_format,
-                templage.report,
-                i.data,
-                False,
-                disabled_fill,
+            templates.append(
+                RequestGenerateReviewTemplate(report=templage.report, data=i.data)
             )
+
         elif isinstance(i, RequestGenerateReviewTemplate):
-            filename, report_file = gen_file_from_report(
-                req.output_format,
-                i.report,
-                i.data,
-                False,
-                disabled_fill,
-            )
+            templates.append(i)
+
         else:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
                 detail="templates is invaild",
             )
+    filename = ""
+    merge_file = PyPDF2.PdfFileMerger()
+    generate_pdf_mutil_ = partial(generate_pdf_mutil, req.output_format, disabled_fill)
+    pools: ProcessPoolExecutor = request.app.state.executor
+    if pools:
+        loop = asyncio.get_event_loop()
+        futures = [
+            loop.run_in_executor(pools, generate_pdf_mutil_, i) for i in templates
+        ]
+        results = await asyncio.gather(*futures)
+        for data in results:
+            if isinstance(data, str):
+                raise HTTPException(
+                    status_code=HTTP_400_BAD_REQUEST,
+                    detail=data,
+                )
 
-        assert report_file
-        merge_file.append(
-            PyPDF2.PdfFileReader(stream=BytesIO(initial_bytes=report_file))
-        )
+            filename = data.filename
+            merge_file.append(
+                PyPDF2.PdfFileReader(stream=BytesIO(initial_bytes=data.report_file))
+            )
+    else:
+        for template in templates:
+            filename = data.filename
+            data = generate_pdf_mutil_(template)
+            merge_file.append(
+                PyPDF2.PdfFileReader(stream=BytesIO(initial_bytes=data.report_file))
+            )
 
     rrr = BytesIO()
     merge_file.write(rrr)
     rrr.seek(0)
 
-    assert filename
     download_key = await storage.put_file(filename, rrr.read(), background_tasks)
     return TemplateDownLoadResponse(
         code=HTTP_200_OK,

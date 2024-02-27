@@ -13,11 +13,17 @@ import re
 from collections import defaultdict
 from dataclasses import asdict
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict
 from typing import List
 
+import pkg_resources
 from reportbro import Report
+from reportbro.reportbro import FPDFRB
 from reportbro.reportbro import DocumentPDFRenderer
 from reportbro.reportbro import DocumentXLSXRenderer
+
+FPDF_FONT_DIR = pkg_resources.resource_filename("fpdf", "font")
 
 FONT_TYPES = {
     "bold": "bold_filename",
@@ -113,7 +119,7 @@ class ReportFontsLoader(object):
     def __init__(self, font_path: str):
         """__init__."""
         self.fonts_cls: List[ReportFonts] = []
-        self.fonts = []
+        self.fonts: List[dict] = []
         self.font_path = font_path
         self.load()
 
@@ -150,6 +156,82 @@ class ReportFontsLoader(object):
         self.fonts = [asdict(i) for i in fonts]
 
 
+class FPDFRB2(FPDFRB):
+    """FPDFRB2."""
+
+    FONT_CACHE: Dict[str, dict] = {}
+
+    def add_font(self, family=None, style="", fname=None, uni="DEPRECATED"):
+        """add_font."""
+        if not fname:
+            raise ValueError('"fname" parameter is required')
+
+        for parent in (".", FPDF_FONT_DIR):
+            if not parent:
+                continue
+
+            if (Path(parent) / fname).exists():
+                font_file_path = Path(parent) / fname
+                break
+        else:
+            raise FileNotFoundError(f"TTF Font file not found: {fname}")
+
+        if family is None:
+            family = font_file_path.stem
+
+        # TODO - use cache to fix performance
+        # https://github.com/py-pdf/fpdf2/issues/1092
+        fontkey = f"{family.lower()}{style}"
+        if fontkey in self.FONT_CACHE and not (
+            fontkey in self.fonts or fontkey in self.core_fonts
+        ):
+            self.fonts[fontkey] = {
+                **self.FONT_CACHE[fontkey],
+                "i": len(self.fonts) + 1,
+            }
+            return
+
+        super().add_font(family, style, fname, uni)
+        self.FONT_CACHE[fontkey] = self.fonts[fontkey]
+
+
+class DocumentPDFRenderer2(DocumentPDFRenderer):
+    """DocumentPDFRenderer2."""
+
+    def __init__(
+        self,
+        header_band,
+        content_band,
+        footer_band,
+        report,
+        context,
+        additional_fonts,
+        filename,
+        add_watermark,
+        page_limit,
+        encode_error_handling,
+        core_fonts_encoding,
+    ):
+        """__init__."""
+        self.header_band = header_band
+        self.content_band = content_band
+        self.footer_band = footer_band
+        self.document_properties = report.document_properties
+        self.pdf_doc = FPDFRB2(
+            report.document_properties,
+            additional_fonts=additional_fonts,
+            encode_error_handling=encode_error_handling,
+            core_fonts_encoding=core_fonts_encoding,
+        )
+        self.pdf_doc.set_margins(0, 0)
+        self.pdf_doc.c_margin = 0  # interior cell margin
+        self.context = context
+        self.filename = filename
+        self.add_watermark = add_watermark
+        self.page_limit = page_limit
+        self.creation_date = report.creation_date
+
+
 class ReportPdf(object):
     """ReportPdf."""
 
@@ -159,7 +241,7 @@ class ReportPdf(object):
         data,
         font_loader: ReportFontsLoader,
         is_test_data=False,
-        **kwargs
+        **kwargs,
     ):
         """__init__."""
         self.font_loader = font_loader
@@ -173,7 +255,7 @@ class ReportPdf(object):
 
     def generate_pdf(self, filename="", add_watermark=False, title=""):
         """generate_pdf."""
-        renderer = DocumentPDFRenderer(
+        renderer = DocumentPDFRenderer2(
             header_band=self.report.header,
             content_band=self.report.content,
             footer_band=self.report.footer,

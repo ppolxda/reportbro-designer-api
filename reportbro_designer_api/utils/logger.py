@@ -8,4 +8,4 @@
 """
 import logging
 
-LOGGER = logging.getLogger("uvicorn.error")
+LOGGER = logging.getLogger("reportbro_api")

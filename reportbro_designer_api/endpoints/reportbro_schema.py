@@ -76,6 +76,20 @@ class RequestGenerateReviewTemplate(BaseModel):
     data: dict = Field(default_factory=dict, title="Source Data")
 
 
+class RequestGenerateTUrlTemplate(BaseModel):
+    """RequestGenerateTUrlTemplate."""
+
+    report_url: dict = Field(title="Template Data")
+    data: dict = Field(default_factory=dict, title="Source Data")
+
+
+class PdfData(BaseModel):
+    """PdfData."""
+
+    filename: str = Field(title="Pdf file name")
+    report_file: bytes = Field(default_factory=dict, title="Pdf Data")
+
+
 class RequestMultiGenerateTemplate(BaseModel):
     """RequestMultiGenerateTemplate."""
 
@@ -84,8 +98,9 @@ class RequestMultiGenerateTemplate(BaseModel):
     )
     templates: List[
         Union[
-            RequestGenerateDataTemplate,
             RequestGenerateUrlTemplate,
+            RequestGenerateTUrlTemplate,
+            RequestGenerateDataTemplate,
             RequestGenerateReviewTemplate,
         ]
     ] = Field(default_factory=list, title="Input templates list")

@@ -9,6 +9,7 @@
 import os
 import re
 import traceback
+from concurrent.futures.process import ProcessPoolExecutor
 from contextlib import asynccontextmanager
 
 from botocore.exceptions import ClientError
@@ -87,8 +88,18 @@ def get_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         print_var()
+        app.state.executor = (
+            ProcessPoolExecutor(settings.PROCESS_POOL_SIZE)
+            if settings.PROCESS_POOL_SIZE > 0
+            else None
+        )
+
         yield
+
         LOGGER.info("service shutdown")
+
+        if app.state.executor:
+            app.state.executor.shutdown()
 
     rapp = FastAPI(
         title="Reportbro designer server",

@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     ROOT_PATH_IN_SERVERS: bool = True
 
     DOWNLOAD_TIMEOUT: int = 180
+    DOWNLOAD_TIMEOUT: int = 180
+    PROCESS_POOL_SIZE: int = 0
 
     # s3://minioadmin:minioadmin@127.0.0.1:9000/reportbro
     # ss3://minioadmin:minioadmin@127.0.0.1:9000/reportbro
