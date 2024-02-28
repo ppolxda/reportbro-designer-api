@@ -29,6 +29,12 @@ class StorageBase(ABC):
             raise StorageError(f"s3_key invaild[{s3_key}]")
         return s3_parse
 
+
+    @abstractmethod
+    def bucket(self):
+        """Bucket name."""
+        raise NotImplementedError
+
     @abstractmethod
     async def clean_all(self):
         """Clean database, This api only use for test."""

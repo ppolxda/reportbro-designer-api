@@ -55,6 +55,10 @@ class LocalStorage(StorageBase):
         LOGGER.info("add file in %s", fs_path)
         background_tasks.add_task(remove_files, self.storage_ttl, fs_path)
 
+    def bucket(self):
+        """Bucket name."""
+        return self.storage_path.name
+
     async def clean_all(self):
         """Clean database, This api only use for test."""
         shutil.rmtree(self.storage_path)

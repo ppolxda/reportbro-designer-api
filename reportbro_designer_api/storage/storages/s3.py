@@ -27,6 +27,10 @@ class S3Storage(StorageBase):
         """init."""
         self._s3cli = s3cli
 
+    def bucket(self):
+        """Bucket name."""
+        return self._s3cli.bucket_name
+
     async def clean_all(self):
         """Clean database, This api only use for test."""
         await self._s3cli.clear_bucket()
@@ -36,10 +40,11 @@ class S3Storage(StorageBase):
         """Put file."""
         s3_obj = self.s3parse(s3_key)
 
+        assert s3_obj.hostname
         async with self._s3cli.s3cli() as client:
             download_url = await client.generate_presigned_url(
                 ClientMethod="get_object",
-                Params={"Bucket": self._s3cli.bucket_name, "Key": s3_obj.path},
+                Params={"Bucket": s3_obj.hostname, "Key": s3_obj.path},
                 ExpiresIn=3600,
             )
             return download_url
@@ -56,10 +61,10 @@ class S3Storage(StorageBase):
             raise StorageError("filetype support")
 
         content = content.mime
-
+        assert s3_obj.hostname
         async with self._s3cli.s3cli() as client:
             res = await client.put_object(
-                Bucket=self._s3cli.bucket_name,
+                Bucket=s3_obj.hostname,
                 Key=s3_obj.path,
                 Body=BytesIO(file_buffer),
                 ContentType=content,
@@ -72,9 +77,10 @@ class S3Storage(StorageBase):
     async def get_file(self, s3_key: str) -> Optional[bytes]:
         """Get file."""
         s3_obj = self.s3parse(s3_key)
+        assert s3_obj.hostname
         async with self._s3cli.s3cli() as client:
             res = await client.get_object(
-                Bucket=self._s3cli.bucket_name, Key=s3_obj.path
+                Bucket=s3_obj.hostname, Key=s3_obj.path
             )
             data = await res["Body"].read()
             return data

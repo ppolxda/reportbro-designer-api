@@ -42,7 +42,7 @@ class StorageMange(object):
         if not project:
             project = self.project_name
 
-        return "s3://" + "/".join([self.REVIEW_PREFIX, project, filename])
+        return "s3://" + "/".join([self.storage.bucket(), self.REVIEW_PREFIX, project, filename])
 
     async def put_file(
         self,
