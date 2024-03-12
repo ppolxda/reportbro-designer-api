@@ -79,8 +79,6 @@ class S3Storage(StorageBase):
         s3_obj = self.s3parse(s3_key)
         assert s3_obj.hostname
         async with self._s3cli.s3cli() as client:
-            res = await client.get_object(
-                Bucket=s3_obj.hostname, Key=s3_obj.path
-            )
+            res = await client.get_object(Bucket=s3_obj.hostname, Key=s3_obj.path)
             data = await res["Body"].read()
             return data

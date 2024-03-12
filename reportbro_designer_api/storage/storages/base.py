@@ -29,7 +29,6 @@ class StorageBase(ABC):
             raise StorageError(f"s3_key invaild[{s3_key}]")
         return s3_parse
 
-
     @abstractmethod
     def bucket(self):
         """Bucket name."""
