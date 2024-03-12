@@ -68,4 +68,4 @@ class StorageMange(object):
         if not r:
             raise StorageError(f"download_key not exist[{download_key}]")
 
-        return os.path.dirname(s3_key), r
+        return os.path.basename(s3_key), r
