@@ -10,6 +10,8 @@ x-reportbro-common:
     MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
     MINIO_SITE_NAME: ${MINIO_SITE_NAME:-reportbro-s3}
     MINIO_SITE_REGION: ${MINIO_SECRET_KEY:-us-west-1}
+    DB_URL: ${DB_URL:-s3://minioadmin:minioadmin@minio:9000/reportbro}
+    STORAGE_URL: ${STORAGE_URL:-s3://minioadmin:minioadmin@minio:9000/reportbro}
 
 services:
   reportbro-server:
