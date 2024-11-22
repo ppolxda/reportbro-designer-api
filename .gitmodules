@@ -1,0 +1,6 @@
+[submodule "reportbro-lib"]
+	path = reportbro-lib
+	url = git@github.com:ppolxda/reportbro-lib.git
+[submodule "reportbro-designer"]
+	path = reportbro-designer
+	url = git@github.com:ppolxda/reportbro-designer.git
