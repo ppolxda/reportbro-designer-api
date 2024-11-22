@@ -547,6 +547,7 @@ ul ul .rbroMenuItemText {
 
 .rbroInfo {
     font-size: 85%;
+    line-height: 130%;
 }
 
 .rbroInfo a, .rbroInfo a:hover, .rbroInfo a:visited, .rbroInfo a:focus, .rbroInfo a:active {
@@ -617,7 +618,7 @@ ul ul .rbroMenuItemText {
 /* Document Panel - Template layouting and PDF preview */
 
 .rbroDocumentPanel {
-    padding-top: 10px;
+    padding: 10px 0;
     right: 0;
     border: 2px solid #E4E7EA;
 }
@@ -1264,6 +1265,7 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
 }
 
 .rbroPopupWindowContent table input[type=text], .rbroPopupWindowContent table input[type=text]:focus,
+.rbroPopupWindowContent table textarea, .rbroPopupWindowContent table textarea:focus,
 .rbroPopupWindowContent table td .expandableCell {
     color: var(--rbro-primary-text-color);
     width: 100%;
@@ -1282,11 +1284,37 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     background-color: transparent;
     box-shadow: none;
     outline: none;
+    font-family: 'Open Sans', sans-serif;
 }
 
-.rbroPopupWindowContent table td.rbroHasFocus input[type=text] {
+.rbroPopupWindowContent table td.rbroHasFocus input[type=text],
+.rbroPopupWindowContent table td.rbroHasFocus textarea
+{
     border: 2px solid #009EE2;
     padding: 2px;
+}
+
+.rbroPopupWindowContent table textarea {
+    resize: none !important;
+    min-height: 30px;
+    height: inherit;
+}
+
+.rbroPopupWindowContent table select {
+    color: var(--rbro-primary-text-color);
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.1);
+    background-color: #F1F3F4;
+    transition: all 0.2s linear;
+    margin: 0;
+    outline: none;
+    font-size: 12px;
+    font-weight: inherit;
+    box-shadow: none;
+    height: 28px;
+    padding: 0 4px;
 }
 
 .rbroPopupWindowContent table td .expandableCell {
@@ -1347,7 +1375,7 @@ button.rbroMenuButton[disabled], button.rbroMenuButton[disabled]:hover,
     padding: 0 4px;
 }
 
-.rbroPopupWindowContent .rbroTestDataCheckbox {
+.rbroPopupWindowContent .rbroDataCheckbox {
     text-align: center;
 }
 
