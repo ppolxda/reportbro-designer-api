@@ -20,10 +20,10 @@ from typing import Dict
 from typing import List
 
 import pkg_resources
+from fpdf.fonts import CORE_FONTS
 from reportbro import Report
 from reportbro.reportbro import FPDFRB
 from reportbro.reportbro import DocumentPDFRenderer
-from reportbro.reportbro import DocumentXLSXRenderer
 
 FPDF_FONT_DIR = pkg_resources.resource_filename("fpdf", "font")
 
@@ -187,7 +187,7 @@ class FPDFRB2(FPDFRB):
         # https://github.com/py-pdf/fpdf2/issues/1092
         fontkey = f"{family.lower()}{style}"
         if fontkey in self.FONT_CACHE and not (
-            fontkey in self.fonts or fontkey in self.core_fonts
+            fontkey in self.fonts or fontkey in CORE_FONTS
         ):
             self.fonts[fontkey] = {
                 **self.FONT_CACHE[fontkey],
