@@ -1,4 +1,6 @@
 {
+    "outputFormat": "pdf",
+    "isTestData": true,
     "report": {
         "docElements": [
             {
