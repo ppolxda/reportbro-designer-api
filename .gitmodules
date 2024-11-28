@@ -1,6 +1,6 @@
 [submodule "reportbro-lib"]
 	path = reportbro-lib
-	url = git@github.com:ppolxda/reportbro-lib.git
+	url = https://github.com/ppolxda/reportbro-lib
 [submodule "reportbro-designer"]
 	path = reportbro-designer
-	url = git@github.com:ppolxda/reportbro-designer.git
+	url = https://github.com/ppolxda/reportbro-designer
