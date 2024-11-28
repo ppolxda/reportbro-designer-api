@@ -6,7 +6,9 @@
 
 @desc: ReportBro Api
 """
+
 from typing import List
+from typing import Optional
 from typing import Union
 
 from pydantic import Field
@@ -117,7 +119,7 @@ class RequestCloneTemplate(BaseModel):
     """RequestCloneTemplate."""
 
     from_tid: str = Field(title="Clone from template id")
-    from_version_id: str = Field("", title="Clone from Template version id")
+    from_version_id: Optional[str] = Field(None, title="Clone from Template version id")
 
 
 class TemplateListResponse(ListResponse[TemplateListData]):

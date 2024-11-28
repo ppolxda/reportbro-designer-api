@@ -68,7 +68,7 @@ class LocalStorage(StorageBase):
         return s3_key
 
     async def put_file(
-        self, s3_key: str, file_buffer: bytes, background_tasks: BackgroundTasks
+        self, s3_key: str, file_buffer: bytes, background_tasks: Optional[BackgroundTasks] = None
     ):
         """Put file."""
         s3_obj = self.s3parse(s3_key)

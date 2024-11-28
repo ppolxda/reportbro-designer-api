@@ -51,10 +51,9 @@ class S3Storage(StorageBase):
 
     @hook_create_bucket_when_not_exist()
     async def put_file(
-        self, s3_key: str, file_buffer: bytes, background_tasks: BackgroundTasks
+        self, s3_key: str, file_buffer: bytes, background_tasks: Optional[BackgroundTasks] = None
     ):
         """Put file."""
-        assert background_tasks
         s3_obj = self.s3parse(s3_key)
         content = guess(file_buffer)
         if not content:

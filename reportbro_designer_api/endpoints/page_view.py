@@ -6,6 +6,7 @@
 
 @desc: page_view
 """
+
 import json
 from enum import Enum
 from gettext import NullTranslations
@@ -55,7 +56,7 @@ async def templates_designer_page(
         settings.PDF_LOCALE,
         title="Show Menu Language(zh_cn|de_de|en_us)",
         alias="locale",
-        regex=r"^(zh_cn|de_de|en_us)$",
+        pattern=r"^(zh_cn|de_de|en_us)$",
     ),
     client: BackendBase = Depends(get_meth_cli),
 ):

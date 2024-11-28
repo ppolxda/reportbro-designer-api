@@ -50,7 +50,7 @@ class StorageMange(object):
         self,
         filename: str,
         file_buffer: bytes,
-        background_tasks: BackgroundTasks,
+        background_tasks: Optional[BackgroundTasks] = None,
         project: Optional[str] = None,
     ) -> DowmloadKey:
         """Put file."""

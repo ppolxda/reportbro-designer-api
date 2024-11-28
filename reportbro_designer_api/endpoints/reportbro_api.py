@@ -6,6 +6,7 @@
 
 @desc: ReportBro Api
 """
+
 import asyncio
 import json
 import os
@@ -18,6 +19,7 @@ from io import BytesIO
 from timeit import default_timer as timer
 from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Union
 from urllib.parse import urlencode
 
@@ -354,7 +356,7 @@ async def delete_templates(
 
 def gen_file_from_report(
     output_format, report_definition, data, is_test_data, disabled_fill
-):
+) -> Tuple[str, bytes]:
     """Review Templates Generate."""
     # all data needed for report preview is sent in the initial PUT request, it contains
     # the format (pdf or xlsx), the report itself (report_definition), the data (test data
@@ -395,11 +397,13 @@ def gen_file_from_report(
         if output_format == "pdf":
             report_file = report.generate_pdf(title=settings.PDF_TITLE)
             filename = "report-" + str(now) + ".pdf"
-            return filename, report_file
+            assert isinstance(report_file, bytearray)
+            return filename, bytes(report_file)
         else:
             report_file = report.generate_xlsx()
             filename = "report-" + str(now) + ".xlsx"
-            return filename, report_file
+            assert isinstance(report_file, bytearray)
+            return filename, bytes(report_file)
     except ReportBroError as ex:
         # in case an error occurs during report report generate
         # a ReportBroError exception is thrown
@@ -469,7 +473,7 @@ async def review_templates_gen(
 )
 async def review_templates(
     output_format: str = Query(
-        "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
+        "pdf", title="Output Format(pdf|xlsx)", pattern=r"^(pdf|xlsx)$"
     ),
     key: str = Query(title="File Key", min_length=16),
     storage: StorageMange = Depends(get_storage_mange),
@@ -477,6 +481,45 @@ async def review_templates(
     """Review Templates."""
     r = await read_file_in_s3(output_format, key, storage)
     return r
+
+
+@router.put(
+    "/templates/review/generate/download",
+    tags=GEN_TAGS,
+    name="Generate preview file from template and Get generate preview file",
+    response_model=TemplateDownLoadResponse,
+)
+async def review_templates_gen_download(
+    request: Request,
+    req: RequestReviewTemplate,
+    background_tasks: BackgroundTasks,
+    disabled_fill: bool = Query(
+        default=False, title="Disable fill empty fields for input data"
+    ),
+    storage: StorageMange = Depends(get_storage_mange),
+):
+    """Review Templates Generate."""
+    filename, report_file = gen_file_from_report(
+        req.output_format, req.report, req.data, req.is_test_data, disabled_fill
+    )
+    assert report_file
+    download_key = await storage.put_file(filename, report_file, background_tasks)
+    return TemplateDownLoadResponse(
+        code=HTTP_200_OK,
+        error="ok",
+        data=TemplateDownLoadData(
+            download_key=download_key,
+            download_url=str(
+                request.url_for("Get generate file from multiple template")
+            )
+            + "?"
+            + urlencode(
+                {
+                    "key": download_key,
+                }
+            ),
+        ),
+    )
 
 
 # ----------------------------------------------
@@ -734,7 +777,7 @@ async def generate_templates_gen(
 )
 async def generate_templates(
     output_format: str = Query(
-        "pdf", title="Output Format(pdf|xlsx)", regex=r"^(pdf|xlsx)$"
+        "pdf", title="Output Format(pdf|xlsx)", pattern=r"^(pdf|xlsx)$"
     ),
     key: str = Query(title="File Key", min_length=16),
     storage: StorageMange = Depends(get_storage_mange),

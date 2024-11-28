@@ -1,0 +1,9 @@
+exclude = [".venv", "reportbro-lib"]
+
+# Same as Black.
+line-length = 88
+indent-width = 4
+
+[lint.isort]
+force-single-line = true
+

@@ -45,7 +45,7 @@ class StorageBase(ABC):
 
     @abstractmethod
     async def put_file(
-        self, s3_key: str, file_buffer: bytes, background_tasks: BackgroundTasks
+        self, s3_key: str, file_buffer: bytes, background_tasks: Optional[BackgroundTasks] = None
     ):
         """Put file."""
         raise NotImplementedError

@@ -6,6 +6,7 @@
 
 @desc: RporetPdf 生成类
 """
+
 import datetime
 import glob
 import os
@@ -13,6 +14,7 @@ import re
 from collections import defaultdict
 from dataclasses import asdict
 from dataclasses import dataclass
+from itertools import chain
 from pathlib import Path
 from typing import Dict
 from typing import List
@@ -126,7 +128,9 @@ class ReportFontsLoader(object):
     def load(self):
         """Load fonts in path."""
         path_list = defaultdict(list)
-        for path in glob.glob(self.font_path + "/*.ttf"):
+        for path in chain(
+            glob.glob(self.font_path + "/*.ttf"), glob.glob(self.font_path + "/*.otf")
+        ):
             dirname = os.path.basename(path)
             names = self.LOAD_FMT_REGIX.match(dirname)
             if not names:
@@ -229,6 +233,7 @@ class DocumentPDFRenderer2(DocumentPDFRenderer):
         self.filename = filename
         self.add_watermark = add_watermark
         self.page_limit = page_limit
+        self.page_count = 0
         self.creation_date = report.creation_date
 
 
@@ -273,16 +278,4 @@ class ReportPdf(object):
                 "_".join([title, datetime.datetime.now().strftime("%Y%m%dT%H%M%S")])
             )
 
-        return renderer.render()
-
-    def generate_xlsx(self, filename=""):
-        """generate_xlsx."""
-        renderer = DocumentXLSXRenderer(
-            header_band=self.report.header,
-            content_band=self.report.content,
-            footer_band=self.report.footer,
-            report=self.report,
-            context=self.report.context,
-            filename=filename,
-        )
         return renderer.render()

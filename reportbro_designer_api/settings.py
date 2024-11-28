@@ -44,8 +44,8 @@ class Settings(BaseSettings):
     # sqlite+aiosqlite:///./reportbro.db
     # mysql+aiomysql://root:root@localhost/reportbro
     # postgresql+asyncpg://postgres:postgres@localhost:5432/reportbro
-    DB_URL: str = "sqlite+aiosqlite:///./data/reportbro.db?re=aa"
-    STORAGE_URL: str = "file://./data?storage_local_ttl=180"
+    DB_URL: str = "s3://minioadmin:minioadmin@127.0.0.1:9000/reportbro"
+    STORAGE_URL: str = "s3://minioadmin:minioadmin@127.0.0.1:9000/reportbro"
 
     @property
     def db_url_mark(self):

@@ -1,27 +1,18 @@
 {
-    "python.linting.enabled": true,
-    "python.linting.banditEnabled": true,
-    "python.linting.flake8Enabled": true,
-    "python.linting.pydocstyleEnabled": true,
-    "python.linting.pylintEnabled": true,
     "[python]": {
-        "editor.defaultFormatter": "ms-python.python",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.codeActionsOnSave": {
-            "source.organizeImports": true
+            "source.organizeImports": "explicit"
         }
     },
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.languageServer": "Pylance",
     "python.analysis.typeCheckingMode": "basic",
-    "python.formatting.provider": "black",
     "python.testing.pytestArgs": [
         "tests"
-    ],
-    "python.linting.banditArgs": [
-        "-c",
-        "./pyproject.tmol"
     ],
     "files.watcherExclude": {
         "**/.git/objects/**": true,
